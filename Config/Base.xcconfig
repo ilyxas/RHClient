@@ -1,0 +1,7 @@
+// Project-wide settings shared by Debug and Release.
+// Signing team and other per-machine values live in Config/Local.xcconfig,
+// which is not committed (see .gitignore). Create it once on the Mac:
+//   echo 'DEVELOPMENT_TEAM = <your Team ID>' > Config/Local.xcconfig
+// Simulator builds and tests work without it.
+
+#include? "Local.xcconfig"

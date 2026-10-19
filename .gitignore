@@ -6,3 +6,4 @@ DerivedData/
 .swiftpm/
 Packages/RHKit/Package.resolved
 __pycache__/
+Config/Local.xcconfig

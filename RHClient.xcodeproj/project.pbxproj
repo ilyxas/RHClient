@@ -31,6 +31,7 @@
 		77D7FD009D0A8BBAE4348128 /* RHClient.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RHClient.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		62E1AB9971EDA4BC154E1C3F /* RHClientTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RHClientTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F53326DD978052EE2B36D030 /* RHClientUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RHClientUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		31538F7925CB4F6E0FD80589 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -83,6 +84,7 @@
 				A02D81422CE47A89B8C4F5EF /* RHClient */,
 				9700C5CBE03CA408B608835F /* RHClientTests */,
 				20B221B552957E0C54C6B8CA /* RHClientUITests */,
+				0DD12BEF9E720050EF2C15C1 /* Config */,
 				8DA8D20814D20CFE04EDA05F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -95,6 +97,14 @@
 				F53326DD978052EE2B36D030 /* RHClientUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		0DD12BEF9E720050EF2C15C1 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				31538F7925CB4F6E0FD80589 /* Base.xcconfig */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -281,6 +291,7 @@
 /* Begin XCBuildConfiguration section */
 		CB74B51E743D0591E1FDA230 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 31538F7925CB4F6E0FD80589 /* Base.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -312,7 +323,6 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD = YES;
 				COPY_PHASE_STRIP = NO;
-				DEVELOPMENT_TEAM = 55C6K9KYBZ;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
@@ -345,6 +355,7 @@
 		};
 		9072D12018AF8966E406CEFB /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 31538F7925CB4F6E0FD80589 /* Base.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -376,7 +387,6 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD = YES;
 				COPY_PHASE_STRIP = NO;
-				DEVELOPMENT_TEAM = 55C6K9KYBZ;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
