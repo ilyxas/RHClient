@@ -94,7 +94,7 @@ RHClient.xcodeproj
 
 ### Тест-векторы
 
-Самая важная часть контракта: одни и те же файлы гоняют тесты обеих сторон, расхождение сериализации ловится в первый день, а не на pairing с iPhone. Клиент проходит: `jcs.json` (scope `protocol`, этап 0), `ecdsa.json`, `request_build.json`, `server_sig.json`, `pairing.json` (этап 1), `ws_frames.json` (этап 3), хеш операции approval (этап 4), `pages/valid|invalid` (этап 5), `ssh_pubkey.json` (этап 6). `signed_requests.json` гоняет сервер; клиент берёт из него коды отказов для текстов в UI.
+Самая важная часть контракта: одни и те же файлы гоняют тесты обеих сторон, расхождение сериализации ловится в первый день, а не на pairing с iPhone. Клиент проходит: `jcs.json` (scope `protocol`, этап 0), `ecdsa.json`, `request_build.json`, `server_sig.json`, `pairing.json`, `ws_frames.json` (этап 1), хеш операции approval (этап 4), `pages/valid|invalid` (этап 5), `ssh_pubkey.json` (этап 6). `signed_requests.json` гоняет сервер; клиент берёт из него коды отказов для текстов в UI.
 
 ### Мок-сервер
 
