@@ -34,14 +34,16 @@ struct RootTabView: View {
         TabView(selection: $selection) {
             ForEach(AppTab.allCases) { tab in
                 Tab(tab.title, systemImage: tab.systemImage, value: tab) {
-                    if tab == .home {
-                        StatusView()
-                    } else {
-                        PlaceholderScreen(tab: tab)
+                    switch tab {
+                    case .home: HomeView()
+                    case .log: LogView()
+                    default: PlaceholderScreen(tab: tab)
                     }
                 }
             }
         }
+        .tint(Palette.accent)
+        .environment(\.openTab, OpenTabAction { selection = $0 })
     }
 }
 

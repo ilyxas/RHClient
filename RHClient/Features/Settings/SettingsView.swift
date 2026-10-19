@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// SPEC §8.7, the stage 1 part: devices, Face ID reset time, core address, version, Re-pair.
+/// SPEC §8.7: connection, devices, Face ID reset time, core address, version, Re-pair.
+/// The theme switch is in the Home header (SPEC §8.1).
 struct SettingsView: View {
     @Environment(AppModel.self) private var model
     @State private var rePairing = false
@@ -11,6 +12,8 @@ struct SettingsView: View {
         @Bindable var model = model
         Form {
             Section {
+                NavigationLink("Connection") { StatusView() }
+                    .accessibilityIdentifier("settings.connection")
                 NavigationLink("Devices") { DevicesView() }
                     .accessibilityIdentifier("settings.devices")
             }

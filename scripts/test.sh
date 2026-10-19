@@ -4,8 +4,9 @@
 #   RH_SIMULATOR="iPhone 17" RH_SIMULATOR_OS=27.1 scripts/test.sh   (default: newest installed iOS runtime)
 #   RH_DEV_PORT=8790 scripts/test.sh   first port to try for the dev core (default 8787;
 #                                      when it is taken, the next free one is used)
-# The pairing UI test runs against the dev core from RHServer next to this repository
-# (RH_SERVER_DIR to point elsewhere); without it that test is skipped.
+# The UI tests run against the dev core from RHServer next to this repository
+# (RH_SERVER_DIR to point elsewhere), with its tests/fixtures/stage2 when present;
+# without RHServer they are skipped.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 SIMULATOR="${RH_SIMULATOR:-iPhone 17 Pro}"
@@ -45,8 +46,19 @@ echo "== simulator: boot, reset keychain, enroll Face ID"
 xcrun simctl boot "$UDID" 2>/dev/null || true
 xcrun simctl bootstatus "$UDID" -b
 xcrun simctl keychain "$UDID" reset
-xcrun simctl spawn "$UDID" notifyutil -s com.apple.BiometricKit.enrollmentChanged 1
-xcrun simctl spawn "$UDID" notifyutil -p com.apple.BiometricKit.enrollmentChanged
+# Right after a cold boot the simulator may reset the enrollment once more, and then
+# Face ID answers biometryUnavailable: set it until it stays set.
+ENROLLED=0
+for _ in $(seq 15); do
+    xcrun simctl spawn "$UDID" notifyutil -s com.apple.BiometricKit.enrollmentChanged 1
+    xcrun simctl spawn "$UDID" notifyutil -p com.apple.BiometricKit.enrollmentChanged
+    sleep 2
+    if [[ "$(xcrun simctl spawn "$UDID" notifyutil -g com.apple.BiometricKit.enrollmentChanged | awk '{print $2}')" == 1 ]]; then
+        ENROLLED=1
+        break
+    fi
+done
+[[ "$ENROLLED" == 1 ]] || { echo "Face ID enrollment did not stick on the simulator"; exit 1; }
 
 cleanup() {
     [[ -n "${MATCH_PID:-}" ]] && kill "$MATCH_PID" 2>/dev/null || true
@@ -70,8 +82,16 @@ if [[ -d "$SERVER_DIR" ]] && command -v uv >/dev/null; then
     done
     echo "== dev core from $SERVER_DIR on 127.0.0.1:$DEV_PORT (log: $DEV_DATA.log)"
     rm -rf "$DEV_DATA" "$PAIRING_FILE"
+    # Stage 2 fixture: fixed metrics and a fictional team, so Home shows known values.
+    FIXTURE_ARGS=()
+    if [[ -d "$SERVER_DIR/tests/fixtures/stage2" ]]; then
+        FIXTURE_ARGS=(--fixture tests/fixtures/stage2)
+        export TEST_RUNNER_RH_FIXTURE=stage2
+    else
+        echo "== no stage 2 fixture in $SERVER_DIR: Home shows the real Mac, value checks are skipped"
+    fi
     (cd "$SERVER_DIR" && exec uv run rhcore dev up --data "$DEV_DATA" --port "$DEV_PORT" --auto-pair \
-        --pairing-file "$PAIRING_FILE") >"$DEV_DATA.log" 2>&1 &
+        --pairing-file "$PAIRING_FILE" ${FIXTURE_ARGS[@]+"${FIXTURE_ARGS[@]}"}) >"$DEV_DATA.log" 2>&1 &
     # A core before RHServer #8 writes the pairing file before it binds, so wait for both.
     for _ in $(seq 60); do
         [[ -s "$PAIRING_FILE" ]] && lsof -nP -iTCP:"$DEV_PORT" -sTCP:LISTEN >/dev/null 2>&1 && break
