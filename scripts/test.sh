@@ -2,7 +2,8 @@
 # All client checks, run on a Mac with Xcode 27:
 #   scripts/test.sh                  contracts, RHKit (swift test), app unit + UI tests (simulator)
 #   RH_SIMULATOR="iPhone 17" RH_SIMULATOR_OS=27.1 scripts/test.sh   (default: newest installed iOS runtime)
-#   RH_DEV_PORT=8788 scripts/test.sh   dev core on another port when 8787 is taken
+#   RH_DEV_PORT=8790 scripts/test.sh   first port to try for the dev core (default 8787;
+#                                      when it is taken, the next free one is used)
 # The pairing UI test runs against the dev core from RHServer next to this repository
 # (RH_SERVER_DIR to point elsewhere); without it that test is skipped.
 set -euo pipefail
@@ -61,17 +62,17 @@ done) &
 MATCH_PID=$!
 
 if [[ -d "$SERVER_DIR" ]] && command -v uv >/dev/null; then
+    # The app takes the core address from the pairing string, so any free port works.
+    for _ in $(seq 20); do
+        lsof -nP -iTCP:"$DEV_PORT" -sTCP:LISTEN >/dev/null 2>&1 || break
+        echo "port $DEV_PORT is taken, trying $((DEV_PORT + 1))"
+        DEV_PORT=$((DEV_PORT + 1))
+    done
     echo "== dev core from $SERVER_DIR on 127.0.0.1:$DEV_PORT (log: $DEV_DATA.log)"
-    if lsof -nP -iTCP:"$DEV_PORT" -sTCP:LISTEN >/dev/null 2>&1; then
-        echo "port $DEV_PORT is taken by another program:"
-        lsof -nP -iTCP:"$DEV_PORT" -sTCP:LISTEN
-        echo "free it or run with another port: RH_DEV_PORT=8788 scripts/test.sh"
-        exit 1
-    fi
     rm -rf "$DEV_DATA" "$PAIRING_FILE"
     (cd "$SERVER_DIR" && exec uv run rhcore dev up --data "$DEV_DATA" --port "$DEV_PORT" --auto-pair \
         --pairing-file "$PAIRING_FILE") >"$DEV_DATA.log" 2>&1 &
-    # The pairing file appears before the core binds its port, so wait for both.
+    # A core before RHServer #8 writes the pairing file before it binds, so wait for both.
     for _ in $(seq 60); do
         [[ -s "$PAIRING_FILE" ]] && lsof -nP -iTCP:"$DEV_PORT" -sTCP:LISTEN >/dev/null 2>&1 && break
         sleep 1
