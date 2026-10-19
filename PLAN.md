@@ -266,7 +266,7 @@ RHClient.xcodeproj
 
 | Пункт | SPEC | Этап | Тип |
 |---|---|---|---|
-| Secure Enclave в симуляторе | §9.1 | 0 | проверить |
+| Secure Enclave в симуляторе | §9.1 | 0 | закрыт: есть, docs/decisions/0001 |
 | Xcode 27 на CI-раннерах (если И1-A) | — | 0 | проверить |
 | Переиспользование LAContext, `.biometryCurrentSet` | §4.1 | 1 | проверить |
 | `tailscale cert` и ATS (совместно с сервером) | §3.3 | 1 | проверить |
