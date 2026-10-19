@@ -40,7 +40,7 @@ final class PairingFlowTests: XCTestCase {
         app.buttons["Re-pair"].tap()
 
         // The dev core issues a new code after every pairing.
-        let second = try nextPairing(pairingFile, after: first)
+        let second = try unusedPairing(pairingFile, after: first)
         UIPasteboard.general.string = second
         app.buttons["pairing.paste"].tap()
         let allowPaste = XCUIApplication(bundleIdentifier: "com.apple.springboard").buttons["Allow Paste"]

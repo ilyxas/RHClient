@@ -16,14 +16,16 @@ extension XCTestCase {
         return text
     }
 
-    func nextPairing(_ path: String, after previous: String) throws -> String {
+    /// A pairing string nobody has used yet. The dev core issues a new code after every
+    /// pairing; when `previous` was never used (the app was already paired at launch), no new
+    /// code comes and `previous` itself is still valid.
+    func unusedPairing(_ path: String, after previous: String) throws -> String {
         let deadline = Date().addingTimeInterval(10)
         while Date() < deadline {
             let text = try currentPairing(path)
             if text != previous { return text }
             Thread.sleep(forTimeInterval: 0.2)
         }
-        XCTFail("the dev core did not issue a new pairing code")
         return previous
     }
 

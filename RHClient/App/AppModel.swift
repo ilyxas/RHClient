@@ -89,6 +89,11 @@ final class AppModel {
         case (_?, nil): lose()
         case (_?, _?): phase = .paired
         }
+        #if DEBUG
+        // A launch argument is for a phone that starts unpaired; a later Re-pair must not
+        // pick it up silently.
+        if record != nil { launchPairingUsed = true }
+        #endif
     }
 
     /// App became active: Face ID for the session if needed, then a fresh status.
