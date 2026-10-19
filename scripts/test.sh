@@ -17,6 +17,5 @@ echo "== RHClient: xcodebuild test ($SIMULATOR, iOS $SIMULATOR_OS)"
 xcodebuild test \
   -project RHClient.xcodeproj \
   -scheme RHClient \
-  -destination "platform=iOS Simulator,name=$SIMULATOR,OS=$SIMULATOR_OS" \
-  -quiet
+  -destination "platform=iOS Simulator,name=$SIMULATOR,OS=$SIMULATOR_OS"
 echo "== all green"
