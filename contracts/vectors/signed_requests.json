@@ -1,0 +1,849 @@
+{
+  "description": "Signed requests the core must accept or reject, evaluated independently against the fixture state at fixture.now. Checks run in the order: malformed_auth, unknown_device, revoked_device, op_mismatch, wrong_key_level, bad_signature, nonce_unknown, nonce_used, nonce_expired, expired, clock_skew, body_mismatch. nonce_consumed: the core marks the nonce used. Pair requests use fixture.pair_codes; their device keys are derived from labels P.*.",
+  "version": 1,
+  "fixture": {
+    "now": "2026-10-19T12:00:00Z",
+    "core_pub_x963_b64": "BAKF7MRPp3mc38ZH/Onn+M9TSqw4sPCszPmTqcZg0mbCNx6VzTbV7TxJY20KiuLE3YmVOS2qrxItb5/9B19Xl4Y=",
+    "devices": [
+      {
+        "id": "d75ea68ce8991662334519e0e806a338",
+        "name": "Мой iPhone",
+        "status": "active",
+        "keys": {
+          "normal": "BPQllmjW8gM+JEyUq3qG/itaXVsvjJMyoCe7oel22giEIwW9HYUjMPFliIJkfglUPyQWUfCHpwo/BKXmAB/fnp8=",
+          "critical": "BO8jAF5WnOLccDHbujtWyURtSmZO8mo/IYHrU+aUCBnCCf+i8AGcppdrubaSWviRNJNqiAK9M6oxTuH6bdFL4Kk=",
+          "ssh": "BIttAxySFiq8dQI4t1MTgiYTqJWSKsdzEDRM8TI0+DvNfm7eeSemKVcUcXyJ8Hp5vwgRPlqO4P3QTCQiSTfuB8A="
+        },
+        "priv_scalars_b64": {
+          "normal": "/eXWO5YVDr8JuYpDZCvHNscDqQwoj4vCfj5Y+OosVQo=",
+          "critical": "M5t2h8row37YECmK/prZPe1m/XalV/eXlUT6CI5SInM=",
+          "ssh": "9CKi3oBcbAb1LwWzjJ2B9D6HE12jAGWmb0idusH5IqM="
+        }
+      },
+      {
+        "id": "0f8a2766d2646446b9a15c0fedcacd53",
+        "name": "iPad",
+        "status": "active",
+        "keys": {
+          "normal": "BCd+hdMlvcfP0qOX4tzz3o/1D0D7DSgBraVGFE0xxuu6aVayPC60rdV5fvFg1/liV55LvMvZf2ki/m9fURsxve4=",
+          "critical": "BDcie1iPLg92ux53haZtNRpovjwzXgF9FoZQbu3pJpkYmUlhXkgPs3CW9LZVwe23XGFCYHKWPl8PP+15QyBlXHo=",
+          "ssh": "BLgSbXT3uEP0DvVDR5HsVNbLFCqwOjX9NCn0JhL2rv3yfFwmvo8jVtohqKOZbzB39FMvptvrXJczavi25eqnLVE="
+        },
+        "priv_scalars_b64": {
+          "normal": "waPRmXGBn/8nbVk2Rhx/0IP38WM9+WTNXOkzbamd6VY=",
+          "critical": "oYvWbK830/YCYlXHao8ZFJk8V9BCh49/VB2P1/UrT/Y=",
+          "ssh": "gkdAgov+9ek1YupLeE0PIkWo0LzFJpDeAjfc24PLOZk="
+        }
+      },
+      {
+        "id": "994a0fc227ccb566e3574cc026f1959c",
+        "name": "Old iPhone",
+        "status": "revoked",
+        "keys": {
+          "normal": "BAFI50C2NRWThz+FBb1xMzoRWhHASiWGpIIjp4Qzinikz827TpYzDRJXxB9KlGm9s0CGdHHPoCnoqjAxtirjbIM=",
+          "critical": "BAGQeNJR8NMButD+kK5bx3Fv7/U0DYQItYb7dNyMcsvOCdinR9+JbYxSpjYQ4mZ3/A/q0X0FpSc/NnItWEftbvU=",
+          "ssh": "BEFu6usiOsBcUpB8ZeUf/Ffu1Ng1qTDH7eNGHzTPw+/hiKtczgGGwhAEYjtx1z4bO5oTHAshlpZvLpbYWJsgeds="
+        },
+        "priv_scalars_b64": {
+          "normal": "s8ZhTZxiphyswvESrzC8NITCTuhI6B0yFe4/ub0o5rY=",
+          "critical": "xbFnl6Xk8gscYHzvqnRvEkKxy81oo9Sqd6mMF5W38zs=",
+          "ssh": "+m1XVagMqScYcluoaamAqa2/zCYixAwKO5zhXVB/Q4o="
+        }
+      }
+    ],
+    "nonces": [
+      {
+        "nonce": "Ca4ZxiwqSsM2vZmJKVG4fhe0hjvTjpEyWa37WWzF898=",
+        "device": "d75ea68ce8991662334519e0e806a338",
+        "expires": "2026-10-19T12:00:30Z",
+        "used": false
+      },
+      {
+        "nonce": "0k7JCU26/O6K6wtQD18SuxrOsJ+1+7gyAi6akpOKrVI=",
+        "device": "d75ea68ce8991662334519e0e806a338",
+        "expires": "2026-10-19T12:00:30Z",
+        "used": true
+      },
+      {
+        "nonce": "CWycfrDp8vNp90wGf9vPiAJ8c6azNyxk/6wVFqpwWUE=",
+        "device": "d75ea68ce8991662334519e0e806a338",
+        "expires": "2026-10-19T11:59:59Z",
+        "used": false
+      },
+      {
+        "nonce": "7kfPlzLnurJjwBwMJ21Yx+dn0e42permqhESoJe5+Ac=",
+        "device": "0f8a2766d2646446b9a15c0fedcacd53",
+        "expires": "2026-10-19T12:00:30Z",
+        "used": false
+      },
+      {
+        "nonce": "ldQRG442QUQ2FQzYuQHEKFldehrjSaopuRU/H63lJe8=",
+        "device": "994a0fc227ccb566e3574cc026f1959c",
+        "expires": "2026-10-19T12:00:30Z",
+        "used": false
+      }
+    ],
+    "pair_codes": [
+      {
+        "code": "3YO4PGkMMdRj4og3mLqkMc7HPEOyMGN4xrmHxj6cRkY=",
+        "expires": "2026-10-19T12:04:00Z",
+        "used": false
+      },
+      {
+        "code": "qPjarpwNCztu/i3NAEty0a2I66stByNWCtWgQbvhoMc=",
+        "expires": "2026-10-19T12:04:00Z",
+        "used": true
+      },
+      {
+        "code": "Fa14NRWF+B0WRSVqAEvlKrH10lRXuvO12XmxsSlGKE0=",
+        "expires": "2026-10-19T11:59:59Z",
+        "used": false
+      }
+    ]
+  },
+  "vectors": [
+    {
+      "name": "ping-ok",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/ping",
+        "op": "ping",
+        "key": "normal"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiNDQxMzZmYTM1NWIzNjc4YTExNDZhZDE2ZjdlODY0OWU5NGZiNGZjMjFmZTc3ZTgzMTBjMDYwZjYxY2FhZmY4YSIsImRldmljZSI6ImQ3NWVhNjhjZTg5OTE2NjIzMzQ1MTllMGU4MDZhMzM4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IkNhNFp4aXdxU3NNMnZabUpLVkc0ZmhlMGhqdlRqcEV5V2EzN1dXekY4OTg9Iiwib3AiOiJwaW5nIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAwOjAwWiIsInYiOjF9",
+        "X-RH-Sig": "MEUCIQDU3z/pa+Qzdk+N5xl2zvrhTbi8ngfVBCsxJRDI6fGcggIgXUhhmv/NdsQq0MIkZLdcVJCcV8o3wGQWqS9ZCVex0RU="
+      },
+      "body_b64": "e30=",
+      "expect": {
+        "result": "accept"
+      },
+      "nonce_consumed": true
+    },
+    {
+      "name": "status-get-empty-body-ok",
+      "endpoint": {
+        "method": "GET",
+        "path": "/v1/status",
+        "op": "status",
+        "key": "normal"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImRldmljZSI6ImQ3NWVhNjhjZTg5OTE2NjIzMzQ1MTllMGU4MDZhMzM4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IkNhNFp4aXdxU3NNMnZabUpLVkc0ZmhlMGhqdlRqcEV5V2EzN1dXekY4OTg9Iiwib3AiOiJzdGF0dXMiLCJ0cyI6IjIwMjYtMTAtMTlUMTI6MDA6MDBaIiwidiI6MX0=",
+        "X-RH-Sig": "MEYCIQDjt5eMMOR1pqDyfNJ3DwFLMr6k2zPEkGoQyXOCgLrZBQIhAKMczQ5Jm7DC3LIzmir0FDvIokPs1orBm0qDIsEb4JxG"
+      },
+      "body_b64": "",
+      "expect": {
+        "result": "accept"
+      },
+      "nonce_consumed": true
+    },
+    {
+      "name": "revoke-critical-ok",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/devices/revoke",
+        "op": "devices.revoke",
+        "key": "critical"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiNWM3NGU0N2EwYmI5MmY5MDcxOWM0NGJlMTBlZjE1Yzk4ZGQzNDJmYWViYzM4YTU1MmMzZTM0MjJjZGZjZjRjNCIsImRldmljZSI6ImQ3NWVhNjhjZTg5OTE2NjIzMzQ1MTllMGU4MDZhMzM4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJjcml0aWNhbCIsIm5vbmNlIjoiQ2E0Wnhpd3FTc00ydlptSktWRzRmaGUwaGp2VGpwRXlXYTM3V1d6Rjg5OD0iLCJvcCI6ImRldmljZXMucmV2b2tlIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAwOjAwWiIsInYiOjF9",
+        "X-RH-Sig": "MEQCIHoS2jNMr0M65dhlmXYlVH4kKmyiqx6V658qlut/J7XBAiBqzCQxC+VgW2yVa15aCgvI+19QdKfvHCv0ft7zcRCUuA=="
+      },
+      "body_b64": "eyJkZXZpY2VfaWQiOiAiOTk0YTBmYzIyN2NjYjU2NmUzNTc0Y2MwMjZmMTk1OWMifQ==",
+      "expect": {
+        "result": "accept"
+      },
+      "nonce_consumed": true
+    },
+    {
+      "name": "clock-ahead-100s-ok",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/ping",
+        "op": "ping",
+        "key": "normal"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiNDQxMzZmYTM1NWIzNjc4YTExNDZhZDE2ZjdlODY0OWU5NGZiNGZjMjFmZTc3ZTgzMTBjMDYwZjYxY2FhZmY4YSIsImRldmljZSI6ImQ3NWVhNjhjZTg5OTE2NjIzMzQ1MTllMGU4MDZhMzM4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMjo0MFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IkNhNFp4aXdxU3NNMnZabUpLVkc0ZmhlMGhqdlRqcEV5V2EzN1dXekY4OTg9Iiwib3AiOiJwaW5nIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAxOjQwWiIsInYiOjF9",
+        "X-RH-Sig": "MEQCIAHu9udahugJzmYZKLu/PFqnOUiSIP113UVD22ICXPgXAiBWxqjYkWEYqlQhDw8wFy/GcbQ8EiIpVR0W68Vbp+RAqA=="
+      },
+      "body_b64": "e30=",
+      "expect": {
+        "result": "accept"
+      },
+      "nonce_consumed": true
+    },
+    {
+      "name": "clock-behind-50s-ok",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/ping",
+        "op": "ping",
+        "key": "normal"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiNDQxMzZmYTM1NWIzNjc4YTExNDZhZDE2ZjdlODY0OWU5NGZiNGZjMjFmZTc3ZTgzMTBjMDYwZjYxY2FhZmY4YSIsImRldmljZSI6ImQ3NWVhNjhjZTg5OTE2NjIzMzQ1MTllMGU4MDZhMzM4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMDoxMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IkNhNFp4aXdxU3NNMnZabUpLVkc0ZmhlMGhqdlRqcEV5V2EzN1dXekY4OTg9Iiwib3AiOiJwaW5nIiwidHMiOiIyMDI2LTEwLTE5VDExOjU5OjEwWiIsInYiOjF9",
+        "X-RH-Sig": "MEUCIQCcxGvjf/NEooGynBJg7icHPf7GQXV3gfLjShTVfYIxMgIgQQj2bYWPT1pV5ubArWxC9JctnnO9Yx73iZrJIafp+KM="
+      },
+      "body_b64": "e30=",
+      "expect": {
+        "result": "accept"
+      },
+      "nonce_consumed": true
+    },
+    {
+      "name": "missing-auth",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/ping",
+        "op": "ping",
+        "key": "normal"
+      },
+      "headers": {
+        "X-RH-Sig": "MEUCIQDU3z/pa+Qzdk+N5xl2zvrhTbi8ngfVBCsxJRDI6fGcggIgXUhhmv/NdsQq0MIkZLdcVJCcV8o3wGQWqS9ZCVex0RU="
+      },
+      "body_b64": "e30=",
+      "expect": {
+        "result": "reject",
+        "code": "malformed_auth",
+        "status": 400
+      },
+      "nonce_consumed": false
+    },
+    {
+      "name": "missing-sig",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/ping",
+        "op": "ping",
+        "key": "normal"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiNDQxMzZmYTM1NWIzNjc4YTExNDZhZDE2ZjdlODY0OWU5NGZiNGZjMjFmZTc3ZTgzMTBjMDYwZjYxY2FhZmY4YSIsImRldmljZSI6ImQ3NWVhNjhjZTg5OTE2NjIzMzQ1MTllMGU4MDZhMzM4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IkNhNFp4aXdxU3NNMnZabUpLVkc0ZmhlMGhqdlRqcEV5V2EzN1dXekY4OTg9Iiwib3AiOiJwaW5nIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAwOjAwWiIsInYiOjF9"
+      },
+      "body_b64": "e30=",
+      "expect": {
+        "result": "reject",
+        "code": "malformed_auth",
+        "status": 400
+      },
+      "nonce_consumed": false
+    },
+    {
+      "name": "auth-not-base64",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/ping",
+        "op": "ping",
+        "key": "normal"
+      },
+      "headers": {
+        "X-RH-Auth": "not base64!",
+        "X-RH-Sig": "MEUCIQDU3z/pa+Qzdk+N5xl2zvrhTbi8ngfVBCsxJRDI6fGcggIgXUhhmv/NdsQq0MIkZLdcVJCcV8o3wGQWqS9ZCVex0RU="
+      },
+      "body_b64": "e30=",
+      "expect": {
+        "result": "reject",
+        "code": "malformed_auth",
+        "status": 400
+      },
+      "nonce_consumed": false
+    },
+    {
+      "name": "auth-not-canonical",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/ping",
+        "op": "ping",
+        "key": "normal"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJ2IjogMSwgImRldmljZSI6ICJkNzVlYTY4Y2U4OTkxNjYyMzM0NTE5ZTBlODA2YTMzOCIsICJrZXkiOiAibm9ybWFsIiwgIm5vbmNlIjogIkNhNFp4aXdxU3NNMnZabUpLVkc0ZmhlMGhqdlRqcEV5V2EzN1dXekY4OTg9IiwgInRzIjogIjIwMjYtMTAtMTlUMTI6MDA6MDBaIiwgImV4cCI6ICIyMDI2LTEwLTE5VDEyOjAxOjAwWiIsICJvcCI6ICJwaW5nIiwgImJvZHkiOiAiNDQxMzZmYTM1NWIzNjc4YTExNDZhZDE2ZjdlODY0OWU5NGZiNGZjMjFmZTc3ZTgzMTBjMDYwZjYxY2FhZmY4YSJ9",
+        "X-RH-Sig": "MEYCIQDaFsf745ZDMC1xctruPSrCLHmYT1GhZvgn0VtBgGMe1AIhAKrvm64wy7uVB3R8f+Vy/C3LfQnpDfBmGp0088JD0PJu"
+      },
+      "body_b64": "e30=",
+      "expect": {
+        "result": "reject",
+        "code": "malformed_auth",
+        "status": 400
+      },
+      "nonce_consumed": false
+    },
+    {
+      "name": "auth-number-as-double",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/ping",
+        "op": "ping",
+        "key": "normal"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiNDQxMzZmYTM1NWIzNjc4YTExNDZhZDE2ZjdlODY0OWU5NGZiNGZjMjFmZTc3ZTgzMTBjMDYwZjYxY2FhZmY4YSIsImRldmljZSI6ImQ3NWVhNjhjZTg5OTE2NjIzMzQ1MTllMGU4MDZhMzM4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IkNhNFp4aXdxU3NNMnZabUpLVkc0ZmhlMGhqdlRqcEV5V2EzN1dXekY4OTg9Iiwib3AiOiJwaW5nIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAwOjAwWiIsInYiOjEuMH0=",
+        "X-RH-Sig": "MEUCIQCF8EuANqLzpgaU31dw1ELOHIfjJKgUScdbpLCb0QIBFwIgGrsL5BLJgTQ3XweYqcoUknj40Y2l/wjdHNW9uv6wR9E="
+      },
+      "body_b64": "e30=",
+      "expect": {
+        "result": "reject",
+        "code": "malformed_auth",
+        "status": 400
+      },
+      "nonce_consumed": false
+    },
+    {
+      "name": "auth-extra-field",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/ping",
+        "op": "ping",
+        "key": "normal"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiNDQxMzZmYTM1NWIzNjc4YTExNDZhZDE2ZjdlODY0OWU5NGZiNGZjMjFmZTc3ZTgzMTBjMDYwZjYxY2FhZmY4YSIsImRldmljZSI6ImQ3NWVhNjhjZTg5OTE2NjIzMzQ1MTllMGU4MDZhMzM4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJleHRyYSI6IngiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IkNhNFp4aXdxU3NNMnZabUpLVkc0ZmhlMGhqdlRqcEV5V2EzN1dXekY4OTg9Iiwib3AiOiJwaW5nIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAwOjAwWiIsInYiOjF9",
+        "X-RH-Sig": "MEUCIQDCCjvMfXC9s5zS5xwwE85rOHAqJ3QL/X4l8j1oQDmn3wIgPu9jy0ih7oGEwk/38rJ8aDt12dJXfMHfHbJEkFoqHaE="
+      },
+      "body_b64": "e30=",
+      "expect": {
+        "result": "reject",
+        "code": "malformed_auth",
+        "status": 400
+      },
+      "nonce_consumed": false
+    },
+    {
+      "name": "auth-ts-with-fraction",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/ping",
+        "op": "ping",
+        "key": "normal"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiNDQxMzZmYTM1NWIzNjc4YTExNDZhZDE2ZjdlODY0OWU5NGZiNGZjMjFmZTc3ZTgzMTBjMDYwZjYxY2FhZmY4YSIsImRldmljZSI6ImQ3NWVhNjhjZTg5OTE2NjIzMzQ1MTllMGU4MDZhMzM4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IkNhNFp4aXdxU3NNMnZabUpLVkc0ZmhlMGhqdlRqcEV5V2EzN1dXekY4OTg9Iiwib3AiOiJwaW5nIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAwOjAwLjAwMFoiLCJ2IjoxfQ==",
+        "X-RH-Sig": "MEYCIQDiM69/jrLsjlsUhKOg7zb1uvXdv6VR5heoNilGgeDZEgIhAJGZEmKNUc8Ybz7id6k6YYJbmO9YjXyYOPB+3WMmUvG2"
+      },
+      "body_b64": "e30=",
+      "expect": {
+        "result": "reject",
+        "code": "malformed_auth",
+        "status": 400
+      },
+      "nonce_consumed": false
+    },
+    {
+      "name": "auth-lifetime-61s",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/ping",
+        "op": "ping",
+        "key": "normal"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiNDQxMzZmYTM1NWIzNjc4YTExNDZhZDE2ZjdlODY0OWU5NGZiNGZjMjFmZTc3ZTgzMTBjMDYwZjYxY2FhZmY4YSIsImRldmljZSI6ImQ3NWVhNjhjZTg5OTE2NjIzMzQ1MTllMGU4MDZhMzM4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMVoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IkNhNFp4aXdxU3NNMnZabUpLVkc0ZmhlMGhqdlRqcEV5V2EzN1dXekY4OTg9Iiwib3AiOiJwaW5nIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAwOjAwWiIsInYiOjF9",
+        "X-RH-Sig": "MEUCIQDhPqW4OjH13j7j4OCYw7ZyO3kKYwFdgqoip2u+/wZAHAIgXa4eXoz28Z8ZsctoCvJaXbIXGse2rp+braIWnUcJHRU="
+      },
+      "body_b64": "e30=",
+      "expect": {
+        "result": "reject",
+        "code": "malformed_auth",
+        "status": 400
+      },
+      "nonce_consumed": false
+    },
+    {
+      "name": "auth-body-uppercase-hex",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/ping",
+        "op": "ping",
+        "key": "normal"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiNDQxMzZGQTM1NUIzNjc4QTExNDZBRDE2RjdFODY0OUU5NEZCNEZDMjFGRTc3RTgzMTBDMDYwRjYxQ0FBRkY4QSIsImRldmljZSI6ImQ3NWVhNjhjZTg5OTE2NjIzMzQ1MTllMGU4MDZhMzM4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IkNhNFp4aXdxU3NNMnZabUpLVkc0ZmhlMGhqdlRqcEV5V2EzN1dXekY4OTg9Iiwib3AiOiJwaW5nIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAwOjAwWiIsInYiOjF9",
+        "X-RH-Sig": "MEYCIQCVQme0F24NZb1R5J8jQtL+uBg4UIcYT2zndJ+KAx8IFwIhAP/lQXCoo7rv2Qg+IEw+Ro0tLDTiQu7+DzV8iAzMV34a"
+      },
+      "body_b64": "e30=",
+      "expect": {
+        "result": "reject",
+        "code": "malformed_auth",
+        "status": 400
+      },
+      "nonce_consumed": false
+    },
+    {
+      "name": "unknown-device",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/ping",
+        "op": "ping",
+        "key": "normal"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiNDQxMzZmYTM1NWIzNjc4YTExNDZhZDE2ZjdlODY0OWU5NGZiNGZjMjFmZTc3ZTgzMTBjMDYwZjYxY2FhZmY4YSIsImRldmljZSI6IjFiMGM5MzkxNzJmNTk0NmM3ZGQ5ZjZmNTQwZTNhYzU4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IkNhNFp4aXdxU3NNMnZabUpLVkc0ZmhlMGhqdlRqcEV5V2EzN1dXekY4OTg9Iiwib3AiOiJwaW5nIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAwOjAwWiIsInYiOjF9",
+        "X-RH-Sig": "MEUCIQC2FPsTLP9oUIYEWxrheYUkoVdZxs4dqWTZmQ3xEVFopgIgRkPVqAvM89lQJtZdDFpEbQdG9SeQDqXb0NCgzkZXWeU="
+      },
+      "body_b64": "e30=",
+      "expect": {
+        "result": "reject",
+        "code": "unknown_device",
+        "status": 403
+      },
+      "nonce_consumed": false
+    },
+    {
+      "name": "revoked-device",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/ping",
+        "op": "ping",
+        "key": "normal"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiNDQxMzZmYTM1NWIzNjc4YTExNDZhZDE2ZjdlODY0OWU5NGZiNGZjMjFmZTc3ZTgzMTBjMDYwZjYxY2FhZmY4YSIsImRldmljZSI6Ijk5NGEwZmMyMjdjY2I1NjZlMzU3NGNjMDI2ZjE5NTljIiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6ImxkUVJHNDQyUVVRMkZRell1UUhFS0ZsZGVocmpTYW9wdVJVL0g2M2xKZTg9Iiwib3AiOiJwaW5nIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAwOjAwWiIsInYiOjF9",
+        "X-RH-Sig": "MEUCIEls6SGp4w6feMvZs4ABy6FcfvJHYbYy11JNBqj5BZoXAiEAmZt8y+BnPXtFHMgYD2Q2A3xkwBJJwXYjj6H0Udt+ZAM="
+      },
+      "body_b64": "e30=",
+      "expect": {
+        "result": "reject",
+        "code": "revoked_device",
+        "status": 403
+      },
+      "nonce_consumed": false
+    },
+    {
+      "name": "op-mismatch",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/ping",
+        "op": "ping",
+        "key": "normal"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiNDQxMzZmYTM1NWIzNjc4YTExNDZhZDE2ZjdlODY0OWU5NGZiNGZjMjFmZTc3ZTgzMTBjMDYwZjYxY2FhZmY4YSIsImRldmljZSI6ImQ3NWVhNjhjZTg5OTE2NjIzMzQ1MTllMGU4MDZhMzM4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IkNhNFp4aXdxU3NNMnZabUpLVkc0ZmhlMGhqdlRqcEV5V2EzN1dXekY4OTg9Iiwib3AiOiJkZXZpY2VzLmxpc3QiLCJ0cyI6IjIwMjYtMTAtMTlUMTI6MDA6MDBaIiwidiI6MX0=",
+        "X-RH-Sig": "MEQCIEtfNRz6I+/7rk5zEqY7tKcgs0ouLwcfz5NlzCFNd1vmAiAFxEthDJQpkqBevO6TLgqX7KXZOH1rg3eaFIqVulcVXw=="
+      },
+      "body_b64": "e30=",
+      "expect": {
+        "result": "reject",
+        "code": "op_mismatch",
+        "status": 401
+      },
+      "nonce_consumed": false
+    },
+    {
+      "name": "normal-key-for-critical-op",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/devices/revoke",
+        "op": "devices.revoke",
+        "key": "critical"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiNWM3NGU0N2EwYmI5MmY5MDcxOWM0NGJlMTBlZjE1Yzk4ZGQzNDJmYWViYzM4YTU1MmMzZTM0MjJjZGZjZjRjNCIsImRldmljZSI6ImQ3NWVhNjhjZTg5OTE2NjIzMzQ1MTllMGU4MDZhMzM4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IkNhNFp4aXdxU3NNMnZabUpLVkc0ZmhlMGhqdlRqcEV5V2EzN1dXekY4OTg9Iiwib3AiOiJkZXZpY2VzLnJldm9rZSIsInRzIjoiMjAyNi0xMC0xOVQxMjowMDowMFoiLCJ2IjoxfQ==",
+        "X-RH-Sig": "MEQCIHIkWWJbJWCm+0YMAcVHGVaioOpzdRkajL30kqXK/1ziAiBonPouu3VwgRQ0XFzOWwZberkH/uDTDCkTPH15OSc4Sw=="
+      },
+      "body_b64": "eyJkZXZpY2VfaWQiOiAiOTk0YTBmYzIyN2NjYjU2NmUzNTc0Y2MwMjZmMTk1OWMifQ==",
+      "expect": {
+        "result": "reject",
+        "code": "wrong_key_level",
+        "status": 401
+      },
+      "nonce_consumed": false
+    },
+    {
+      "name": "critical-key-for-normal-op",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/ping",
+        "op": "ping",
+        "key": "normal"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiNDQxMzZmYTM1NWIzNjc4YTExNDZhZDE2ZjdlODY0OWU5NGZiNGZjMjFmZTc3ZTgzMTBjMDYwZjYxY2FhZmY4YSIsImRldmljZSI6ImQ3NWVhNjhjZTg5OTE2NjIzMzQ1MTllMGU4MDZhMzM4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJjcml0aWNhbCIsIm5vbmNlIjoiQ2E0Wnhpd3FTc00ydlptSktWRzRmaGUwaGp2VGpwRXlXYTM3V1d6Rjg5OD0iLCJvcCI6InBpbmciLCJ0cyI6IjIwMjYtMTAtMTlUMTI6MDA6MDBaIiwidiI6MX0=",
+        "X-RH-Sig": "MEUCIBExyfE6lvWvmrDDz6wWjvHi2HO5zzAe/Gt3iKcOQktdAiEA2sYDJqLJzuwegUWrdvKSgiTRxq+zPLzGa6KwO9nJ46c="
+      },
+      "body_b64": "e30=",
+      "expect": {
+        "result": "reject",
+        "code": "wrong_key_level",
+        "status": 401
+      },
+      "nonce_consumed": false
+    },
+    {
+      "name": "signed-by-other-device-key",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/ping",
+        "op": "ping",
+        "key": "normal"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiNDQxMzZmYTM1NWIzNjc4YTExNDZhZDE2ZjdlODY0OWU5NGZiNGZjMjFmZTc3ZTgzMTBjMDYwZjYxY2FhZmY4YSIsImRldmljZSI6ImQ3NWVhNjhjZTg5OTE2NjIzMzQ1MTllMGU4MDZhMzM4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IkNhNFp4aXdxU3NNMnZabUpLVkc0ZmhlMGhqdlRqcEV5V2EzN1dXekY4OTg9Iiwib3AiOiJwaW5nIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAwOjAwWiIsInYiOjF9",
+        "X-RH-Sig": "MEUCIBqfd3KGPo2cz6AiKLefyFm8wcAZVQM7ua9fnqd4r9biAiEA3cU4UW2Aa7MnP82tr0MWmAP4RRKDLHePbZ/kjwcwkY4="
+      },
+      "body_b64": "e30=",
+      "expect": {
+        "result": "reject",
+        "code": "bad_signature",
+        "status": 401
+      },
+      "nonce_consumed": false
+    },
+    {
+      "name": "signed-by-own-critical-key",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/ping",
+        "op": "ping",
+        "key": "normal"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiNDQxMzZmYTM1NWIzNjc4YTExNDZhZDE2ZjdlODY0OWU5NGZiNGZjMjFmZTc3ZTgzMTBjMDYwZjYxY2FhZmY4YSIsImRldmljZSI6ImQ3NWVhNjhjZTg5OTE2NjIzMzQ1MTllMGU4MDZhMzM4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IkNhNFp4aXdxU3NNMnZabUpLVkc0ZmhlMGhqdlRqcEV5V2EzN1dXekY4OTg9Iiwib3AiOiJwaW5nIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAwOjAwWiIsInYiOjF9",
+        "X-RH-Sig": "MEQCIB3Q6jRbpEQtXQ1VBoSk+qmYZNZKVZikbaU1OV1TzmmiAiAJczVeuD/ezNiiSdc5Q9Ve4cY49NJbynsjV6Mf5FoGAA=="
+      },
+      "body_b64": "e30=",
+      "expect": {
+        "result": "reject",
+        "code": "bad_signature",
+        "status": 401
+      },
+      "nonce_consumed": false
+    },
+    {
+      "name": "nonce-unknown",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/ping",
+        "op": "ping",
+        "key": "normal"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiNDQxMzZmYTM1NWIzNjc4YTExNDZhZDE2ZjdlODY0OWU5NGZiNGZjMjFmZTc3ZTgzMTBjMDYwZjYxY2FhZmY4YSIsImRldmljZSI6ImQ3NWVhNjhjZTg5OTE2NjIzMzQ1MTllMGU4MDZhMzM4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6Imx0RWJMTjlHeVV4N3lsWllFeXNKK2ZBaU80cFNPVjNjMW40cG1sT2NzRFk9Iiwib3AiOiJwaW5nIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAwOjAwWiIsInYiOjF9",
+        "X-RH-Sig": "MEYCIQCdm/YIS7s+lLtLP4/iviBw2kFkOUjt2ZaG3tuPtrDv7gIhAM1/JZa58ijsTH3OEJoup5qOSmeTnHUi7EeQm36GHcLQ"
+      },
+      "body_b64": "e30=",
+      "expect": {
+        "result": "reject",
+        "code": "nonce_unknown",
+        "status": 401
+      },
+      "nonce_consumed": false
+    },
+    {
+      "name": "nonce-of-other-device",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/ping",
+        "op": "ping",
+        "key": "normal"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiNDQxMzZmYTM1NWIzNjc4YTExNDZhZDE2ZjdlODY0OWU5NGZiNGZjMjFmZTc3ZTgzMTBjMDYwZjYxY2FhZmY4YSIsImRldmljZSI6ImQ3NWVhNjhjZTg5OTE2NjIzMzQ1MTllMGU4MDZhMzM4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IjdrZlBsekxudXJKandCd01KMjFZeCtkbjBlNDJwZXJtcWhFU29KZTUrQWM9Iiwib3AiOiJwaW5nIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAwOjAwWiIsInYiOjF9",
+        "X-RH-Sig": "MEYCIQDvdwvmMCmrNZdyykWn4e/7eBwSUtvyzBk5pcUitAiqXgIhAM6kDEVV3lI4ELDINtVRJ3oGRk2nPDQMOL6DGw6Bv+Lm"
+      },
+      "body_b64": "e30=",
+      "expect": {
+        "result": "reject",
+        "code": "nonce_unknown",
+        "status": 401
+      },
+      "nonce_consumed": false
+    },
+    {
+      "name": "nonce-used",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/ping",
+        "op": "ping",
+        "key": "normal"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiNDQxMzZmYTM1NWIzNjc4YTExNDZhZDE2ZjdlODY0OWU5NGZiNGZjMjFmZTc3ZTgzMTBjMDYwZjYxY2FhZmY4YSIsImRldmljZSI6ImQ3NWVhNjhjZTg5OTE2NjIzMzQ1MTllMGU4MDZhMzM4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IjBrN0pDVTI2L082SzZ3dFFEMThTdXhyT3NKKzErN2d5QWk2YWtwT0tyVkk9Iiwib3AiOiJwaW5nIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAwOjAwWiIsInYiOjF9",
+        "X-RH-Sig": "MEUCIBAzrnp/tksxqTTDXIwwGBIexs9ueJmJBhegxjoG1ajpAiEA6OFQz/Ojb4KJINlKdvi8sFKO27TY5b4ojgRnY/eRqU0="
+      },
+      "body_b64": "e30=",
+      "expect": {
+        "result": "reject",
+        "code": "nonce_used",
+        "status": 401
+      },
+      "nonce_consumed": false
+    },
+    {
+      "name": "nonce-expired",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/ping",
+        "op": "ping",
+        "key": "normal"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiNDQxMzZmYTM1NWIzNjc4YTExNDZhZDE2ZjdlODY0OWU5NGZiNGZjMjFmZTc3ZTgzMTBjMDYwZjYxY2FhZmY4YSIsImRldmljZSI6ImQ3NWVhNjhjZTg5OTE2NjIzMzQ1MTllMGU4MDZhMzM4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IkNXeWNmckRwOHZOcDkwd0dmOXZQaUFKOGM2YXpOeXhrLzZ3VkZxcHdXVUU9Iiwib3AiOiJwaW5nIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAwOjAwWiIsInYiOjF9",
+        "X-RH-Sig": "MEUCIGT6Gpqk+TAVcS2DiDA96CeFuZAphkdHiq6RCpoC0XrlAiEAsXkAJw3Y28HYg68BSkERt2mXzqAlqU/C34QWVoH8gtg="
+      },
+      "body_b64": "e30=",
+      "expect": {
+        "result": "reject",
+        "code": "nonce_expired",
+        "status": 401
+      },
+      "nonce_consumed": true
+    },
+    {
+      "name": "exp-in-past",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/ping",
+        "op": "ping",
+        "key": "normal"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiNDQxMzZmYTM1NWIzNjc4YTExNDZhZDE2ZjdlODY0OWU5NGZiNGZjMjFmZTc3ZTgzMTBjMDYwZjYxY2FhZmY4YSIsImRldmljZSI6ImQ3NWVhNjhjZTg5OTE2NjIzMzQ1MTllMGU4MDZhMzM4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMTo1OTozMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IkNhNFp4aXdxU3NNMnZabUpLVkc0ZmhlMGhqdlRqcEV5V2EzN1dXekY4OTg9Iiwib3AiOiJwaW5nIiwidHMiOiIyMDI2LTEwLTE5VDExOjU4OjMwWiIsInYiOjF9",
+        "X-RH-Sig": "MEYCIQDC2Wc09jM8KNzkbGdphFxjoOxZNPsSgstvmSCpXFV6RgIhALLHQrUNOWMNRU+BYIA+BmX+67XSa0Q0g2oC84xANEHh"
+      },
+      "body_b64": "e30=",
+      "expect": {
+        "result": "reject",
+        "code": "expired",
+        "status": 401
+      },
+      "nonce_consumed": true
+    },
+    {
+      "name": "clock-ahead-150s",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/ping",
+        "op": "ping",
+        "key": "normal"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiNDQxMzZmYTM1NWIzNjc4YTExNDZhZDE2ZjdlODY0OWU5NGZiNGZjMjFmZTc3ZTgzMTBjMDYwZjYxY2FhZmY4YSIsImRldmljZSI6ImQ3NWVhNjhjZTg5OTE2NjIzMzQ1MTllMGU4MDZhMzM4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMzozMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IkNhNFp4aXdxU3NNMnZabUpLVkc0ZmhlMGhqdlRqcEV5V2EzN1dXekY4OTg9Iiwib3AiOiJwaW5nIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAyOjMwWiIsInYiOjF9",
+        "X-RH-Sig": "MEYCIQCQKK+LFXTWlhrlX6xNbokLWUWmNIzlqA/grcYvAyrYqQIhAPSRGttMzxgfANt/kh6j9tevPfV+b1F8SyLYbEWD2rtM"
+      },
+      "body_b64": "e30=",
+      "expect": {
+        "result": "reject",
+        "code": "clock_skew",
+        "status": 401
+      },
+      "nonce_consumed": true
+    },
+    {
+      "name": "body-changed",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/ping",
+        "op": "ping",
+        "key": "normal"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiNDQxMzZmYTM1NWIzNjc4YTExNDZhZDE2ZjdlODY0OWU5NGZiNGZjMjFmZTc3ZTgzMTBjMDYwZjYxY2FhZmY4YSIsImRldmljZSI6ImQ3NWVhNjhjZTg5OTE2NjIzMzQ1MTllMGU4MDZhMzM4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IkNhNFp4aXdxU3NNMnZabUpLVkc0ZmhlMGhqdlRqcEV5V2EzN1dXekY4OTg9Iiwib3AiOiJwaW5nIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAwOjAwWiIsInYiOjF9",
+        "X-RH-Sig": "MEUCIQDU3z/pa+Qzdk+N5xl2zvrhTbi8ngfVBCsxJRDI6fGcggIgXUhhmv/NdsQq0MIkZLdcVJCcV8o3wGQWqS9ZCVex0RU="
+      },
+      "body_b64": "eyJ4IjoxfQ==",
+      "expect": {
+        "result": "reject",
+        "code": "body_mismatch",
+        "status": 401
+      },
+      "nonce_consumed": true
+    },
+    {
+      "name": "pair-ok",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/pair",
+        "op": "pair",
+        "key": "normal+critical"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiN2U5MTAwYzI5MDFiOGI0OGI5YjAyMjU4NjBlMTYyNTliNzBhNjI5Y2U1MjE1Mzc0MGJlODcyZjMwYWY3MmZmZiIsImRldmljZSI6IjFiMGM5MzkxNzJmNTk0NmM3ZGQ5ZjZmNTQwZTNhYzU4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IjNZTzRQR2tNTWRSajRvZzNtTHFrTWM3SFBFT3lNR040eHJtSHhqNmNSa1k9Iiwib3AiOiJwYWlyIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAwOjAwWiIsInYiOjF9",
+        "X-RH-Sig": "MEYCIQDLVyw8Pd3UFhXKSQ6A8/SENFvqZceXp5bhK/0Hfc7rRQIhAII5ZseANSeKHsCjiF7hKd3EG6YKcH3H7oa3RMJixmrl",
+        "X-RH-Sig-Critical": "MEUCIEeF1qY79qDnQsFYc9AV0VxWAUJxPbT24M/uYLSF6BeMAiEAiQumWSO6nrqsWZSmnOCxtu5vqxKBdT5VQcjH+VIBlGY="
+      },
+      "body_b64": "eyJuYW1lIjogItCc0L7QuSBpUGhvbmUiLCAia2V5cyI6IHsibm9ybWFsIjogIkJDWmJvalIrVWZvQ0R2RFB0U1Q4dGIvd3VPY1JTQzJmbm9xTVBGSVlRYnFxVjRUNnQyQkl2OTFZWHhwRVprMGk3V0RnY2QrNG44M21jNForOW9PWnY4QT0iLCAiY3JpdGljYWwiOiAiQlBSRlVnSXpieWxZL2NUZGJLSXRweVdHejVvOGpzUXRWcVQreHFpRlVQVVIwZm4yTy9QZFVVenJ0K1lHdkFCdFBNaVJrYjRUNlR4M3JVelNXNGsvTjcwPSIsICJzc2giOiAiQkI2WFdIaHNGdXpiRy95Ym5FK0VwZW1vTEJaRXhTNUV3Y1c0TUV3azA4WnN5OHp3WTJaZmxtaWkyeHN5V3JuZ1loUjIvTkhXSzRlWHd4OGh1VXY0anAwPSJ9fQ==",
+      "expect": {
+        "result": "accept"
+      }
+    },
+    {
+      "name": "pair-ok-replaces",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/pair",
+        "op": "pair",
+        "key": "normal+critical"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiZmIxYzlmN2FkNDEyMmExOWI3YTRlNTlkYzI2MDQ2MjYyNTI5YjEwYzBiOTc2NTdiYWIxZTFmYzQ3YzBhMmY0ZCIsImRldmljZSI6IjFiMGM5MzkxNzJmNTk0NmM3ZGQ5ZjZmNTQwZTNhYzU4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IjNZTzRQR2tNTWRSajRvZzNtTHFrTWM3SFBFT3lNR040eHJtSHhqNmNSa1k9Iiwib3AiOiJwYWlyIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAwOjAwWiIsInYiOjF9",
+        "X-RH-Sig": "MEUCIQDmoDEidYV4BRc21CPXNLrYr9aujR0ygvu7n4w1PIH96gIgQGeT21Nndfk26av09vx5pUckgPGhPBvmEmzXDwJUmwo=",
+        "X-RH-Sig-Critical": "MEYCIQC7SDbAxlfhZr5U+MwbvgLORvBZY1uz52T0zyOllrUMYQIhAIse7ZMeCBqsWCw6HA8NFhBqxst6ObuMztY/452QaRoN"
+      },
+      "body_b64": "eyJuYW1lIjogItCc0L7QuSBpUGhvbmUiLCAia2V5cyI6IHsibm9ybWFsIjogIkJDWmJvalIrVWZvQ0R2RFB0U1Q4dGIvd3VPY1JTQzJmbm9xTVBGSVlRYnFxVjRUNnQyQkl2OTFZWHhwRVprMGk3V0RnY2QrNG44M21jNForOW9PWnY4QT0iLCAiY3JpdGljYWwiOiAiQlBSRlVnSXpieWxZL2NUZGJLSXRweVdHejVvOGpzUXRWcVQreHFpRlVQVVIwZm4yTy9QZFVVenJ0K1lHdkFCdFBNaVJrYjRUNlR4M3JVelNXNGsvTjcwPSIsICJzc2giOiAiQkI2WFdIaHNGdXpiRy95Ym5FK0VwZW1vTEJaRXhTNUV3Y1c0TUV3azA4WnN5OHp3WTJaZmxtaWkyeHN5V3JuZ1loUjIvTkhXSzRlWHd4OGh1VXY0anAwPSJ9LCAicmVwbGFjZXMiOiAiZDc1ZWE2OGNlODk5MTY2MjMzNDUxOWUwZTgwNmEzMzgifQ==",
+      "expect": {
+        "result": "accept"
+      }
+    },
+    {
+      "name": "pair-missing-critical-sig",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/pair",
+        "op": "pair",
+        "key": "normal+critical"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiN2U5MTAwYzI5MDFiOGI0OGI5YjAyMjU4NjBlMTYyNTliNzBhNjI5Y2U1MjE1Mzc0MGJlODcyZjMwYWY3MmZmZiIsImRldmljZSI6IjFiMGM5MzkxNzJmNTk0NmM3ZGQ5ZjZmNTQwZTNhYzU4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IjNZTzRQR2tNTWRSajRvZzNtTHFrTWM3SFBFT3lNR040eHJtSHhqNmNSa1k9Iiwib3AiOiJwYWlyIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAwOjAwWiIsInYiOjF9",
+        "X-RH-Sig": "MEYCIQDLVyw8Pd3UFhXKSQ6A8/SENFvqZceXp5bhK/0Hfc7rRQIhAII5ZseANSeKHsCjiF7hKd3EG6YKcH3H7oa3RMJixmrl"
+      },
+      "body_b64": "eyJuYW1lIjogItCc0L7QuSBpUGhvbmUiLCAia2V5cyI6IHsibm9ybWFsIjogIkJDWmJvalIrVWZvQ0R2RFB0U1Q4dGIvd3VPY1JTQzJmbm9xTVBGSVlRYnFxVjRUNnQyQkl2OTFZWHhwRVprMGk3V0RnY2QrNG44M21jNForOW9PWnY4QT0iLCAiY3JpdGljYWwiOiAiQlBSRlVnSXpieWxZL2NUZGJLSXRweVdHejVvOGpzUXRWcVQreHFpRlVQVVIwZm4yTy9QZFVVenJ0K1lHdkFCdFBNaVJrYjRUNlR4M3JVelNXNGsvTjcwPSIsICJzc2giOiAiQkI2WFdIaHNGdXpiRy95Ym5FK0VwZW1vTEJaRXhTNUV3Y1c0TUV3azA4WnN5OHp3WTJaZmxtaWkyeHN5V3JuZ1loUjIvTkhXSzRlWHd4OGh1VXY0anAwPSJ9fQ==",
+      "expect": {
+        "result": "reject",
+        "code": "malformed_auth",
+        "status": 400
+      }
+    },
+    {
+      "name": "pair-device-not-from-key",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/pair",
+        "op": "pair",
+        "key": "normal+critical"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiN2U5MTAwYzI5MDFiOGI0OGI5YjAyMjU4NjBlMTYyNTliNzBhNjI5Y2U1MjE1Mzc0MGJlODcyZjMwYWY3MmZmZiIsImRldmljZSI6ImQ3NWVhNjhjZTg5OTE2NjIzMzQ1MTllMGU4MDZhMzM4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IjNZTzRQR2tNTWRSajRvZzNtTHFrTWM3SFBFT3lNR040eHJtSHhqNmNSa1k9Iiwib3AiOiJwYWlyIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAwOjAwWiIsInYiOjF9",
+        "X-RH-Sig": "MEQCIGq1seULe210tVAAyg7tIRNQbhIr475i7rcnIHemVDDgAiBXZIh46vcFEO7W04xWnZ+5M0toyQXjt56pJDOq9T175A==",
+        "X-RH-Sig-Critical": "MEUCIHq1t3L72wXrCsdQKQDM/TCX8wwkqam2Nam1uAFECOzzAiEAnogzSkTEb1zbUe4ed7pS3oJf9KZRzxCWsRdp4uB/CIU="
+      },
+      "body_b64": "eyJuYW1lIjogItCc0L7QuSBpUGhvbmUiLCAia2V5cyI6IHsibm9ybWFsIjogIkJDWmJvalIrVWZvQ0R2RFB0U1Q4dGIvd3VPY1JTQzJmbm9xTVBGSVlRYnFxVjRUNnQyQkl2OTFZWHhwRVprMGk3V0RnY2QrNG44M21jNForOW9PWnY4QT0iLCAiY3JpdGljYWwiOiAiQlBSRlVnSXpieWxZL2NUZGJLSXRweVdHejVvOGpzUXRWcVQreHFpRlVQVVIwZm4yTy9QZFVVenJ0K1lHdkFCdFBNaVJrYjRUNlR4M3JVelNXNGsvTjcwPSIsICJzc2giOiAiQkI2WFdIaHNGdXpiRy95Ym5FK0VwZW1vTEJaRXhTNUV3Y1c0TUV3azA4WnN5OHp3WTJaZmxtaWkyeHN5V3JuZ1loUjIvTkhXSzRlWHd4OGh1VXY0anAwPSJ9fQ==",
+      "expect": {
+        "result": "reject",
+        "code": "malformed_auth",
+        "status": 400
+      }
+    },
+    {
+      "name": "pair-wrong-op",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/pair",
+        "op": "pair",
+        "key": "normal+critical"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiN2U5MTAwYzI5MDFiOGI0OGI5YjAyMjU4NjBlMTYyNTliNzBhNjI5Y2U1MjE1Mzc0MGJlODcyZjMwYWY3MmZmZiIsImRldmljZSI6IjFiMGM5MzkxNzJmNTk0NmM3ZGQ5ZjZmNTQwZTNhYzU4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IjNZTzRQR2tNTWRSajRvZzNtTHFrTWM3SFBFT3lNR040eHJtSHhqNmNSa1k9Iiwib3AiOiJwaW5nIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAwOjAwWiIsInYiOjF9",
+        "X-RH-Sig": "MEUCIQDQaGOMyuplZ6aJ6MFTz1dz1zaNVhvIDJdMLZrHt+sxfAIgdpUEPTZicc3ZoEnvxKNCkYwtlGX9qcoY7XDlsYUy4tE=",
+        "X-RH-Sig-Critical": "MEUCIDCWxxTjpBwlBsyDfm/6gXKIGhFsTxRQVw/dyiWzxtVEAiEA5ei/DNQk5BOvIgjYuvLuxjTyUadn1o27lu+haujKVC8="
+      },
+      "body_b64": "eyJuYW1lIjogItCc0L7QuSBpUGhvbmUiLCAia2V5cyI6IHsibm9ybWFsIjogIkJDWmJvalIrVWZvQ0R2RFB0U1Q4dGIvd3VPY1JTQzJmbm9xTVBGSVlRYnFxVjRUNnQyQkl2OTFZWHhwRVprMGk3V0RnY2QrNG44M21jNForOW9PWnY4QT0iLCAiY3JpdGljYWwiOiAiQlBSRlVnSXpieWxZL2NUZGJLSXRweVdHejVvOGpzUXRWcVQreHFpRlVQVVIwZm4yTy9QZFVVenJ0K1lHdkFCdFBNaVJrYjRUNlR4M3JVelNXNGsvTjcwPSIsICJzc2giOiAiQkI2WFdIaHNGdXpiRy95Ym5FK0VwZW1vTEJaRXhTNUV3Y1c0TUV3azA4WnN5OHp3WTJaZmxtaWkyeHN5V3JuZ1loUjIvTkhXSzRlWHd4OGh1VXY0anAwPSJ9fQ==",
+      "expect": {
+        "result": "reject",
+        "code": "op_mismatch",
+        "status": 401
+      }
+    },
+    {
+      "name": "pair-code-unknown",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/pair",
+        "op": "pair",
+        "key": "normal+critical"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiN2U5MTAwYzI5MDFiOGI0OGI5YjAyMjU4NjBlMTYyNTliNzBhNjI5Y2U1MjE1Mzc0MGJlODcyZjMwYWY3MmZmZiIsImRldmljZSI6IjFiMGM5MzkxNzJmNTk0NmM3ZGQ5ZjZmNTQwZTNhYzU4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6Imx0RWJMTjlHeVV4N3lsWllFeXNKK2ZBaU80cFNPVjNjMW40cG1sT2NzRFk9Iiwib3AiOiJwYWlyIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAwOjAwWiIsInYiOjF9",
+        "X-RH-Sig": "MEQCIFmpDalRMH6EQV5maiOkrieE9LUzL4EmLZcaXaNhOdHNAiBkGLjCOuWisZK5cZ5J4L28P9qxOnvrLsX7CpE0+FAyJA==",
+        "X-RH-Sig-Critical": "MEQCIBZPNqhONK8L6j4YtbaY0i2SZWjQSj4l7+VAI6pmRAaAAiAdDpqdAQwvmufbAnLLT/3ecFGu3/54UFd+kn0BLZ3aCw=="
+      },
+      "body_b64": "eyJuYW1lIjogItCc0L7QuSBpUGhvbmUiLCAia2V5cyI6IHsibm9ybWFsIjogIkJDWmJvalIrVWZvQ0R2RFB0U1Q4dGIvd3VPY1JTQzJmbm9xTVBGSVlRYnFxVjRUNnQyQkl2OTFZWHhwRVprMGk3V0RnY2QrNG44M21jNForOW9PWnY4QT0iLCAiY3JpdGljYWwiOiAiQlBSRlVnSXpieWxZL2NUZGJLSXRweVdHejVvOGpzUXRWcVQreHFpRlVQVVIwZm4yTy9QZFVVenJ0K1lHdkFCdFBNaVJrYjRUNlR4M3JVelNXNGsvTjcwPSIsICJzc2giOiAiQkI2WFdIaHNGdXpiRy95Ym5FK0VwZW1vTEJaRXhTNUV3Y1c0TUV3azA4WnN5OHp3WTJaZmxtaWkyeHN5V3JuZ1loUjIvTkhXSzRlWHd4OGh1VXY0anAwPSJ9fQ==",
+      "expect": {
+        "result": "reject",
+        "code": "bad_pair_code",
+        "status": 403
+      }
+    },
+    {
+      "name": "pair-code-used",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/pair",
+        "op": "pair",
+        "key": "normal+critical"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiN2U5MTAwYzI5MDFiOGI0OGI5YjAyMjU4NjBlMTYyNTliNzBhNjI5Y2U1MjE1Mzc0MGJlODcyZjMwYWY3MmZmZiIsImRldmljZSI6IjFiMGM5MzkxNzJmNTk0NmM3ZGQ5ZjZmNTQwZTNhYzU4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6InFQamFycHdOQ3p0dS9pM05BRXR5MGEySTY2c3RCeU5XQ3RXZ1FidmhvTWM9Iiwib3AiOiJwYWlyIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAwOjAwWiIsInYiOjF9",
+        "X-RH-Sig": "MEYCIQDVgir5Nv70oOZ/H4BfQi0iHgw6nGJnPRMUV9+k3KnarwIhALKgw8pkFWa484bUNfyMURIbB21wwfidcLvFiTbscH1X",
+        "X-RH-Sig-Critical": "MEYCIQCtxM37e7wMYG9D26wUGt41odA5pGp0NNAwt+W5WEM/DQIhAJYsPLymoICLUhPCIgIrxlEw17UMn5dPgY3iGZGF9XWa"
+      },
+      "body_b64": "eyJuYW1lIjogItCc0L7QuSBpUGhvbmUiLCAia2V5cyI6IHsibm9ybWFsIjogIkJDWmJvalIrVWZvQ0R2RFB0U1Q4dGIvd3VPY1JTQzJmbm9xTVBGSVlRYnFxVjRUNnQyQkl2OTFZWHhwRVprMGk3V0RnY2QrNG44M21jNForOW9PWnY4QT0iLCAiY3JpdGljYWwiOiAiQlBSRlVnSXpieWxZL2NUZGJLSXRweVdHejVvOGpzUXRWcVQreHFpRlVQVVIwZm4yTy9QZFVVenJ0K1lHdkFCdFBNaVJrYjRUNlR4M3JVelNXNGsvTjcwPSIsICJzc2giOiAiQkI2WFdIaHNGdXpiRy95Ym5FK0VwZW1vTEJaRXhTNUV3Y1c0TUV3azA4WnN5OHp3WTJaZmxtaWkyeHN5V3JuZ1loUjIvTkhXSzRlWHd4OGh1VXY0anAwPSJ9fQ==",
+      "expect": {
+        "result": "reject",
+        "code": "bad_pair_code",
+        "status": 403
+      }
+    },
+    {
+      "name": "pair-code-expired",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/pair",
+        "op": "pair",
+        "key": "normal+critical"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiN2U5MTAwYzI5MDFiOGI0OGI5YjAyMjU4NjBlMTYyNTliNzBhNjI5Y2U1MjE1Mzc0MGJlODcyZjMwYWY3MmZmZiIsImRldmljZSI6IjFiMGM5MzkxNzJmNTk0NmM3ZGQ5ZjZmNTQwZTNhYzU4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IkZhMTROUldGK0IwV1JTVnFBRXZsS3JIMTBsUlh1dk8xMlhteHNTbEdLRTA9Iiwib3AiOiJwYWlyIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAwOjAwWiIsInYiOjF9",
+        "X-RH-Sig": "MEYCIQDZpqVmH+ALoF579S2MS0GsA7zNTKo4HlE/z7D0M0wihwIhANzfJ2DMfPuqEky/Hc8I5Sp7vheZ4UOv9j/U0jwz8R7a",
+        "X-RH-Sig-Critical": "MEQCIB2/gZx9A8hwWujuRHxUMz/ZTrPL3duUwGuLjSPHxFpwAiB/FGqkKZALQxmD57iscmyKWAP7vX34yNvT2IRPTxl2cA=="
+      },
+      "body_b64": "eyJuYW1lIjogItCc0L7QuSBpUGhvbmUiLCAia2V5cyI6IHsibm9ybWFsIjogIkJDWmJvalIrVWZvQ0R2RFB0U1Q4dGIvd3VPY1JTQzJmbm9xTVBGSVlRYnFxVjRUNnQyQkl2OTFZWHhwRVprMGk3V0RnY2QrNG44M21jNForOW9PWnY4QT0iLCAiY3JpdGljYWwiOiAiQlBSRlVnSXpieWxZL2NUZGJLSXRweVdHejVvOGpzUXRWcVQreHFpRlVQVVIwZm4yTy9QZFVVenJ0K1lHdkFCdFBNaVJrYjRUNlR4M3JVelNXNGsvTjcwPSIsICJzc2giOiAiQkI2WFdIaHNGdXpiRy95Ym5FK0VwZW1vTEJaRXhTNUV3Y1c0TUV3azA4WnN5OHp3WTJaZmxtaWkyeHN5V3JuZ1loUjIvTkhXSzRlWHd4OGh1VXY0anAwPSJ9fQ==",
+      "expect": {
+        "result": "reject",
+        "code": "bad_pair_code",
+        "status": 403
+      }
+    },
+    {
+      "name": "pair-critical-sig-by-normal-key",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/pair",
+        "op": "pair",
+        "key": "normal+critical"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiN2U5MTAwYzI5MDFiOGI0OGI5YjAyMjU4NjBlMTYyNTliNzBhNjI5Y2U1MjE1Mzc0MGJlODcyZjMwYWY3MmZmZiIsImRldmljZSI6IjFiMGM5MzkxNzJmNTk0NmM3ZGQ5ZjZmNTQwZTNhYzU4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IjNZTzRQR2tNTWRSajRvZzNtTHFrTWM3SFBFT3lNR040eHJtSHhqNmNSa1k9Iiwib3AiOiJwYWlyIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAwOjAwWiIsInYiOjF9",
+        "X-RH-Sig": "MEYCIQDLVyw8Pd3UFhXKSQ6A8/SENFvqZceXp5bhK/0Hfc7rRQIhAII5ZseANSeKHsCjiF7hKd3EG6YKcH3H7oa3RMJixmrl",
+        "X-RH-Sig-Critical": "MEYCIQDLVyw8Pd3UFhXKSQ6A8/SENFvqZceXp5bhK/0Hfc7rRQIhAII5ZseANSeKHsCjiF7hKd3EG6YKcH3H7oa3RMJixmrl"
+      },
+      "body_b64": "eyJuYW1lIjogItCc0L7QuSBpUGhvbmUiLCAia2V5cyI6IHsibm9ybWFsIjogIkJDWmJvalIrVWZvQ0R2RFB0U1Q4dGIvd3VPY1JTQzJmbm9xTVBGSVlRYnFxVjRUNnQyQkl2OTFZWHhwRVprMGk3V0RnY2QrNG44M21jNForOW9PWnY4QT0iLCAiY3JpdGljYWwiOiAiQlBSRlVnSXpieWxZL2NUZGJLSXRweVdHejVvOGpzUXRWcVQreHFpRlVQVVIwZm4yTy9QZFVVenJ0K1lHdkFCdFBNaVJrYjRUNlR4M3JVelNXNGsvTjcwPSIsICJzc2giOiAiQkI2WFdIaHNGdXpiRy95Ym5FK0VwZW1vTEJaRXhTNUV3Y1c0TUV3azA4WnN5OHp3WTJaZmxtaWkyeHN5V3JuZ1loUjIvTkhXSzRlWHd4OGh1VXY0anAwPSJ9fQ==",
+      "expect": {
+        "result": "reject",
+        "code": "bad_signature",
+        "status": 401
+      }
+    },
+    {
+      "name": "pair-body-changed",
+      "endpoint": {
+        "method": "POST",
+        "path": "/v1/pair",
+        "op": "pair",
+        "key": "normal+critical"
+      },
+      "headers": {
+        "X-RH-Auth": "eyJib2R5IjoiZmViMDNkZmM0NzgzNWYxZTBmMzk5OGM1NDRjNDQxZTg3OWEyZTI5YjQ5NzQzZWFmMjA2NWE5Y2QyZDE1YmMzOSIsImRldmljZSI6IjFiMGM5MzkxNzJmNTk0NmM3ZGQ5ZjZmNTQwZTNhYzU4IiwiZXhwIjoiMjAyNi0xMC0xOVQxMjowMTowMFoiLCJrZXkiOiJub3JtYWwiLCJub25jZSI6IjNZTzRQR2tNTWRSajRvZzNtTHFrTWM3SFBFT3lNR040eHJtSHhqNmNSa1k9Iiwib3AiOiJwYWlyIiwidHMiOiIyMDI2LTEwLTE5VDEyOjAwOjAwWiIsInYiOjF9",
+        "X-RH-Sig": "MEQCIEFcVGTvf9MkCWU0R0W4wbSZdUh5FQQdkW3wPYE4PhM0AiBfXgCkLJ/QT/fv8clYtEum8nMXUoRa+nbyTHQYV0e3rA==",
+        "X-RH-Sig-Critical": "MEUCIQCdDJrUo6ZdFDdcGSVsPwIvaEOij4ZQwsiiFT4RywJajwIgBamPRAnJUoWSHKmyH52eNXLcKckGVEKjcazLAFDphVQ="
+      },
+      "body_b64": "eyJuYW1lIjogItCc0L7QuSBpUGhvbmUiLCAia2V5cyI6IHsibm9ybWFsIjogIkJDWmJvalIrVWZvQ0R2RFB0U1Q4dGIvd3VPY1JTQzJmbm9xTVBGSVlRYnFxVjRUNnQyQkl2OTFZWHhwRVprMGk3V0RnY2QrNG44M21jNForOW9PWnY4QT0iLCAiY3JpdGljYWwiOiAiQlBSRlVnSXpieWxZL2NUZGJLSXRweVdHejVvOGpzUXRWcVQreHFpRlVQVVIwZm4yTy9QZFVVenJ0K1lHdkFCdFBNaVJrYjRUNlR4M3JVelNXNGsvTjcwPSIsICJzc2giOiAiQkI2WFdIaHNGdXpiRy95Ym5FK0VwZW1vTEJaRXhTNUV3Y1c0TUV3azA4WnN5OHp3WTJaZmxtaWkyeHN5V3JuZ1loUjIvTkhXSzRlWHd4OGh1VXY0anAwPSJ9fQ==",
+      "expect": {
+        "result": "reject",
+        "code": "body_mismatch",
+        "status": 401
+      }
+    }
+  ]
+}
