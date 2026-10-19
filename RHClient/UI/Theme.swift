@@ -46,6 +46,11 @@ enum Palette {
         UIColor(rgb: traits.userInterfaceStyle == .dark ? accentDark : accentLight)
     })
 
+    /// Text on an accent fill: black on the light lime, white on the darker light-theme accent.
+    static let onAccent = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark ? .black : .white
+    })
+
     /// Online / ok. In the dark theme the accent, as in the concept; system green in light.
     static let ok = Color(uiColor: UIColor { traits in
         traits.userInterfaceStyle == .dark ? UIColor(rgb: accentDark) : .systemGreen

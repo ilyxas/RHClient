@@ -59,7 +59,7 @@ struct LogView: View {
                             .padding(.vertical, 7)
                     }
                     .buttonStyle(.plain)
-                    .foregroundStyle(filter == choice ? Color.black : Color.primary)
+                    .foregroundStyle(filter == choice ? Palette.onAccent : Color.primary)
                     .glassEffect(filter == choice ? .regular.tint(Palette.accent).interactive() : .regular.interactive(), in: .capsule)
                     .accessibilityAddTraits(filter == choice ? .isSelected : [])
                     .accessibilityIdentifier("log.filter.\(choice.rawValue)")

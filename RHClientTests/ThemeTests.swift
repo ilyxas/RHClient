@@ -15,6 +15,11 @@ struct ThemeTests {
         #expect(Palette.contrast(Palette.accentDark, 0x1C1C1E) >= 4.5)  // dark secondary background
     }
 
+    @Test func textOnAccentIsReadable() {
+        #expect(Palette.contrast(Palette.accentLight, 0xFFFFFF) >= 4.5)  // white on the light-theme accent
+        #expect(Palette.contrast(Palette.accentDark, 0x000000) >= 4.5)  // black on the dark-theme accent
+    }
+
     @Test func contrastFormula() {
         #expect(abs(Palette.contrast(0x000000, 0xFFFFFF) - 21) < 0.001)
         #expect(Palette.contrast(0x777777, 0x777777) == 1)

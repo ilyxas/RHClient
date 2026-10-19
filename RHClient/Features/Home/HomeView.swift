@@ -124,7 +124,14 @@ struct HomeView: View {
         case .error(let message)?: problem = message
         case nil: break
         }
-        return MetricCard(title: title, systemImage: systemImage, value: text, caption: text == nil ? nil : caption, problem: problem)
+        // "112 GB" + "free": the number in SF Mono, the unit with the caption ("112 GB free").
+        var value = text
+        var words = caption
+        if let text, let space = text.firstIndex(of: " ") {
+            value = String(text[..<space])
+            words = [String(text[text.index(after: space)...]), caption].compactMap { $0 }.joined(separator: " ")
+        }
+        return MetricCard(title: title, systemImage: systemImage, value: value, caption: value == nil ? nil : words, problem: problem)
             .accessibilityIdentifier("home.metric.\(id)")
     }
 
