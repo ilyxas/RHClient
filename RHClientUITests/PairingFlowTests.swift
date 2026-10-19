@@ -21,7 +21,8 @@ final class PairingFlowTests: XCTestCase {
         app.launchArguments = ["-RHPairing", first]
         app.launch()
 
-        let connection = app.descendants(matching: .any)["status.connection"]
+        // The identifier sits on a Label, so both its text and its icon carry it.
+        let connection = app.staticTexts["status.connection"]
         XCTAssertTrue(waitForConnected(connection, timeout: 90), "not connected after pairing")
 
         app.buttons["status.ping"].tap()
