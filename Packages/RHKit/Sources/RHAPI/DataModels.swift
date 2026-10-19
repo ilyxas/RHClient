@@ -67,7 +67,9 @@ public enum DataResult: Decodable, Equatable, Sendable {
             case "rows": value = .rows(try container.decode([Row].self, forKey: .value))
             case "text": value = .text(try container.decode(String.self, forKey: .value))
             case let other:
-                throw DecodingError.dataCorruptedError(forKey: .type, in: container, debugDescription: "unknown data type \(other)")
+                // A type from a newer core: this one value shows as an error, the rest of the batch stays.
+                self = .error("unsupported data type \(other)")
+                return
             }
             self = .active(value, at: try container.decode(String.self, forKey: .at))
         case "pending":
@@ -75,7 +77,7 @@ public enum DataResult: Decodable, Equatable, Sendable {
         case "error":
             self = .error(try container.decode(String.self, forKey: .message))
         case let other:
-            throw DecodingError.dataCorruptedError(forKey: .status, in: container, debugDescription: "unknown data status \(other)")
+            self = .error("unsupported data status \(other)")
         }
     }
 
@@ -282,8 +284,18 @@ public struct QuickResponse: Decodable, Equatable, Sendable {
 
 /// A pinned page or action on Home (SPEC §8.2). Always empty until stage 5.
 public struct QuickItem: Decodable, Equatable, Sendable, Identifiable {
-    public enum Kind: String, Decodable, Sendable {
+    public enum Kind: Decodable, Equatable, Sendable {
         case page, action
+        /// A kind from a newer core.
+        case other(String)
+
+        public init(from decoder: any Decoder) throws {
+            switch try decoder.singleValueContainer().decode(String.self) {
+            case "page": self = .page
+            case "action": self = .action
+            case let raw: self = .other(raw)
+            }
+        }
     }
 
     public let kind: Kind

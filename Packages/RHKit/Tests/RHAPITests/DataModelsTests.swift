@@ -42,13 +42,27 @@ struct DataModelsTests {
         for json in [
             #"{"status":"active","type":"number","value":"38","at":"2026-10-19T12:00:00Z"}"#,
             #"{"status":"active","type":"rows","value":[{"id":"x"}],"at":"2026-10-19T12:00:00Z"}"#,
-            #"{"status":"active","type":"chart","value":1,"at":"2026-10-19T12:00:00Z"}"#,
             #"{"status":"active","type":"number","value":1}"#,
             #"{"status":"error"}"#,
-            #"{"status":"maybe"}"#,
         ] {
             #expect(throws: (any Error).self, "\(json)") { try JSONDecoder().decode(DataResult.self, from: Data(json.utf8)) }
         }
+    }
+
+    @Test func newerShapesDoNotBreakTheBatch() throws {
+        let json = #"""
+        {"values":{"sys.cpu":{"status":"active","type":"number","value":1,"at":"2026-10-19T12:00:00Z"},
+                   "x.chart":{"status":"active","type":"chart","value":[1,2],"at":"2026-10-19T12:00:00Z"},
+                   "x.later":{"status":"stale","since":"2026-10-19T12:00:00Z"}},
+         "server_time":"2026-10-19T12:00:00Z"}
+        """#
+        let values = try JSONDecoder().decode(DataResponse.self, from: Data(json.utf8)).values
+        #expect(values["sys.cpu"]?.value?.number == 1)
+        #expect(values["x.chart"] == .error("unsupported data type chart"))
+        #expect(values["x.later"] == .error("unsupported data status stale"))
+
+        let quick = try JSONDecoder().decode(QuickResponse.self, from: Data(#"{"items":[{"kind":"folder","id":"f","title":"F"}]}"#.utf8))
+        #expect(quick.items.first?.kind == .other("folder"))
     }
 
     @Test func decodesLogPage() throws {
