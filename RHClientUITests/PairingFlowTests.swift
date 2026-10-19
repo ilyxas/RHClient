@@ -75,6 +75,12 @@ final class PairingFlowTests: XCTestCase {
             }
             Thread.sleep(forTimeInterval: 0.5)
         }
+        // Keep what the screen showed, so a failed run says where it stopped.
+        let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        shot.name = "timeout waiting for \(element.identifier.isEmpty ? element.label : element.identifier)"
+        shot.lifetime = .keepAlways
+        add(shot)
+        if element.exists { print("\(element.identifier): \(element.label)") }
         return false
     }
 

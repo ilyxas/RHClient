@@ -2,6 +2,7 @@
 # All client checks, run on a Mac with Xcode 27:
 #   scripts/test.sh                  contracts, RHKit (swift test), app unit + UI tests (simulator)
 #   RH_SIMULATOR="iPhone 17" RH_SIMULATOR_OS=27.1 scripts/test.sh   (default: newest installed iOS runtime)
+#   RH_DEV_PORT=8788 scripts/test.sh   dev core on another port when 8787 is taken
 # The pairing UI test runs against the dev core from RHServer next to this repository
 # (RH_SERVER_DIR to point elsewhere); without it that test is skipped.
 set -euo pipefail
@@ -11,6 +12,7 @@ SIMULATOR_OS="${RH_SIMULATOR_OS:-latest}"
 SERVER_DIR="${RH_SERVER_DIR:-../RHServer}"
 DEV_DATA=/tmp/rh-dev-ui
 PAIRING_FILE=/tmp/rh-dev-ui-pairing.txt
+DEV_PORT="${RH_DEV_PORT:-8787}"
 
 echo "== contracts/"
 scripts/check-contracts.sh
@@ -59,23 +61,34 @@ done) &
 MATCH_PID=$!
 
 if [[ -d "$SERVER_DIR" ]] && command -v uv >/dev/null; then
-    echo "== dev core from $SERVER_DIR on 127.0.0.1:8787 (log: $DEV_DATA.log)"
+    echo "== dev core from $SERVER_DIR on 127.0.0.1:$DEV_PORT (log: $DEV_DATA.log)"
+    if lsof -nP -iTCP:"$DEV_PORT" -sTCP:LISTEN >/dev/null 2>&1; then
+        echo "port $DEV_PORT is taken by another program:"
+        lsof -nP -iTCP:"$DEV_PORT" -sTCP:LISTEN
+        echo "free it or run with another port: RH_DEV_PORT=8788 scripts/test.sh"
+        exit 1
+    fi
     rm -rf "$DEV_DATA" "$PAIRING_FILE"
-    (cd "$SERVER_DIR" && exec uv run rhcore dev up --data "$DEV_DATA" --port 8787 --auto-pair \
+    (cd "$SERVER_DIR" && exec uv run rhcore dev up --data "$DEV_DATA" --port "$DEV_PORT" --auto-pair \
         --pairing-file "$PAIRING_FILE") >"$DEV_DATA.log" 2>&1 &
+    # The pairing file appears before the core binds its port, so wait for both.
     for _ in $(seq 60); do
-        [[ -s "$PAIRING_FILE" ]] && break
+        [[ -s "$PAIRING_FILE" ]] && lsof -nP -iTCP:"$DEV_PORT" -sTCP:LISTEN >/dev/null 2>&1 && break
         sleep 1
     done
-    [[ -s "$PAIRING_FILE" ]] || { echo "dev core did not start, see $DEV_DATA.log"; exit 1; }
+    lsof -nP -iTCP:"$DEV_PORT" -sTCP:LISTEN >/dev/null 2>&1 && [[ -s "$PAIRING_FILE" ]] \
+        || { echo "dev core did not start:"; cat "$DEV_DATA.log"; exit 1; }
     export TEST_RUNNER_RH_PAIRING_FILE="$PAIRING_FILE"
 else
     echo "== no RHServer at $SERVER_DIR (or no uv): the pairing UI test is skipped"
 fi
 
 echo "== RHClient: xcodebuild test ($SIMULATOR, iOS $SIMULATOR_OS)"
+# No parallel testing: it runs the tests on clones of the simulator, where the Keychain
+# reset, the Face ID enrollment and the matching-face loop above do not reach.
 xcodebuild test \
   -project RHClient.xcodeproj \
   -scheme RHClient \
-  -destination "id=$UDID"
+  -destination "id=$UDID" \
+  -parallel-testing-enabled NO
 echo "== all green"
