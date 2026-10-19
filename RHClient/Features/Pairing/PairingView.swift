@@ -29,7 +29,7 @@ struct PairingView: View {
         }
         .task {
             #if DEBUG
-            if model.pairingProgress == nil, let text = UserDefaults.standard.string(forKey: "RHPairing") {
+            if model.pairingProgress == nil, let text = model.takeLaunchPairing() {
                 start(text)
             }
             #endif

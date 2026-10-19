@@ -203,6 +203,17 @@ final class AppModel {
     }
     #endif
 
+    #if DEBUG
+    private var launchPairingUsed = false
+
+    /// `-RHPairing <string>` (Debug): used once per launch, so a later Re-pair does not reuse a spent code.
+    func takeLaunchPairing() -> String? {
+        guard !launchPairingUsed else { return nil }
+        launchPairingUsed = true
+        return UserDefaults.standard.string(forKey: "RHPairing")
+    }
+    #endif
+
     // MARK: - Pairing
 
     func parsePairing(_ text: String) throws(PairingString.ParseError) -> PairingString {
