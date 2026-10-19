@@ -46,11 +46,12 @@ RHClient.xcodeproj
 ├─ RHClient/              приложение, SwiftUI, iOS 27, Swift 6 (strict concurrency)
 │   ├─ App/               точка входа, таб-бар Home · Chat · Terminal · Log · Pages, Face ID-сессия
 │   ├─ Features/          Pairing, Home, Chat, Terminal, Log, Pages, Settings, Approval
+│   ├─ Keys/              KeyProvider (Secure Enclave; программный ключ только в Debug), Face ID-сессия, Keychain
 │   └─ UI/                единая библиотека компонентов (DESIGN.md): MetricCard, StatusRow,
 │                         ActionTile, … — из неё собраны и Home, и страницы rh.page/1
 ├─ Packages/RHKit/        локальный Swift Package, без UI
-│   ├─ RHCrypto           JCS (RFC 8785), KeyProvider, подпись запросов, проверка X-RH-Server-Sig
-│   ├─ RHAPI              HTTP-клиент, challenge, ошибки → состояние соединения, WebSocket
+│   ├─ RHCrypto           JCS (RFC 8785), подпись запросов (MessageSigner), проверка X-RH-Server-Sig, отпечаток
+│   ├─ RHAPI              операции, pairing-строка, HTTP-клиент, challenge, ошибки → состояние соединения, WebSocket
 │   ├─ RHPages            модели rh.page/1, строгий декодер, валидатор, выражения visibleWhen/enabledWhen
 │   └─ RHModels           значения data_id (number/string/bool/status/rows/text), журнал, approvals
 ├─ RHClientTests/ + Packages/RHKit/Tests/   юнит-тесты, контрактные тест-векторы
