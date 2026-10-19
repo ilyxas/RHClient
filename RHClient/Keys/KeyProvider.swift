@@ -137,11 +137,17 @@ struct SoftwareKeyProvider: KeyProvider {
 enum KeyProviders {
     /// The provider for new keys on this device, chosen at run time (docs/decisions/0001).
     static func forNewKeys() throws(KeyError) -> any KeyProvider {
+        #if DEBUG && targetEnvironment(simulator)
+        // The simulator's Secure Enclave refuses keys bound to biometry (LAError -1020,
+        // "not supported on iOS Simulator"). Face ID itself still runs before every signature.
+        return SoftwareKeyProvider()
+        #else
         if SecureEnclave.isAvailable { return SecureEnclaveKeyProvider() }
         #if DEBUG
         return SoftwareKeyProvider()
         #else
         throw .unsupportedDevice
+        #endif
         #endif
     }
 
