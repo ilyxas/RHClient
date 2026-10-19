@@ -14,6 +14,8 @@ final class SigningSession: MessageSigner {
     private let faceID: any FaceIDAuthenticating
     private var sessionContext: LAContext?
     private var backgroundedAt: Date?
+    private var unlocking = false
+    private var waiters: [CheckedContinuation<Void, Never>] = []
 
     init(keys: StoredKeySet, faceID: any FaceIDAuthenticating, resetInterval: TimeInterval = SigningSession.defaultResetInterval) {
         self.keys = keys
@@ -24,10 +26,22 @@ final class SigningSession: MessageSigner {
     var isUnlocked: Bool { sessionContext != nil }
 
     /// Face ID when the app opens; later `normal` signatures reuse this context.
+    /// Calls that arrive while Face ID is on screen wait for it instead of asking again.
     func unlock() async throws(KeyError) {
-        if sessionContext == nil {
-            sessionContext = try await faceID.authenticate(reason: String(localized: "Unlock RemoteHands"))
+        if sessionContext != nil { return }
+        if unlocking {
+            await withCheckedContinuation { waiters.append($0) }
+            guard sessionContext != nil else { throw .cancelled }
+            return
         }
+        unlocking = true
+        defer {
+            unlocking = false
+            let waiting = waiters
+            waiters = []
+            waiting.forEach { $0.resume() }
+        }
+        sessionContext = try await faceID.authenticate(reason: String(localized: "Unlock RemoteHands"))
     }
 
     func lock() {

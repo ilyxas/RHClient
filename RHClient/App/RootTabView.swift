@@ -34,7 +34,11 @@ struct RootTabView: View {
         TabView(selection: $selection) {
             ForEach(AppTab.allCases) { tab in
                 Tab(tab.title, systemImage: tab.systemImage, value: tab) {
-                    PlaceholderScreen(tab: tab)
+                    if tab == .home {
+                        StatusView()
+                    } else {
+                        PlaceholderScreen(tab: tab)
+                    }
                 }
             }
         }
@@ -59,4 +63,5 @@ private struct PlaceholderScreen: View {
 
 #Preview {
     RootTabView()
+        .environment(AppModel(store: MemorySecretStore()))
 }

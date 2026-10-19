@@ -13,6 +13,7 @@ final class FakeFaceID: FaceIDAuthenticating {
 
     func authenticate(reason: String) async throws(KeyError) -> LAContext {
         prompts += 1
+        await Task.yield()  // like the real prompt, let other callers run meanwhile
         if let failure { throw failure }
         return LAContext()
     }
@@ -82,6 +83,15 @@ struct SigningSessionTests {
         _ = try await session.signature(for: message, level: .normal)
         #expect(faceID.prompts == 1)
         #expect(try isValid(first, message, session.keys.normal))
+    }
+
+    @Test func concurrentCallsShareOneFaceID() async throws {
+        let faceID = FakeFaceID()
+        let session = try session(faceID)
+        async let first = session.signature(for: Data("a".utf8), level: .normal)
+        async let second = session.signature(for: Data("b".utf8), level: .normal)
+        _ = try await (first, second)
+        #expect(faceID.prompts == 1)
     }
 
     @Test func criticalAsksEveryTime() async throws {
