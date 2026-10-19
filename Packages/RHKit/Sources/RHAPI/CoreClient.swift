@@ -106,6 +106,21 @@ public struct CoreClient: Sendable {
         try await call(.devicesRevoke, body: JSONEncoder().encode(RevokeRequest(deviceID: deviceID)))
     }
 
+    /// Current values of data sources, e.g. ``BuiltinData/home``.
+    public func data(ids: [String]) async throws -> DataResponse {
+        try await call(.dataGet, body: JSONEncoder().encode(DataRequest(ids: ids)))
+    }
+
+    /// One page of the Log feed, newest first.
+    public func log(_ request: LogRequest) async throws -> LogResponse {
+        try await call(.logList, body: JSONEncoder().encode(request))
+    }
+
+    /// Quick Access items for Home.
+    public func quick() async throws -> QuickResponse {
+        try await call(.quickList)
+    }
+
     /// Headers for the /v1/ws upgrade and the nonce its frames are signed with.
     public func eventStreamRequest() async throws -> (request: URLRequest, nonce: String) {
         let nonce = try await challenge().nonce

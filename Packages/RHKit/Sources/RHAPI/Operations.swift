@@ -37,4 +37,8 @@ public struct CoreOperation: Equatable, Sendable {
         op: "devices.revoke", method: .post, path: "/v1/devices/revoke", auth: .signed(.critical)
     )
     public static let wsOpen = CoreOperation(op: "ws.open", method: .get, path: "/v1/ws", auth: .signed(.normal))
+    // Reads with parameters are POST, so the signed body hash covers the parameters.
+    public static let dataGet = CoreOperation(op: "data.get", method: .post, path: "/v1/data", auth: .signed(.normal))
+    public static let logList = CoreOperation(op: "log.list", method: .post, path: "/v1/log", auth: .signed(.normal))
+    public static let quickList = CoreOperation(op: "quick.list", method: .get, path: "/v1/quick", auth: .signed(.normal))
 }

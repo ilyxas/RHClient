@@ -12,6 +12,9 @@ public enum ConnectionState: Equatable, Sendable {
     public init?(error: any Error) {
         guard let error = error as? CoreClientError else { return nil }
         switch error {
+        case .rejected(let rejection) where rejection.code == .badRequest || rejection.code == .notFound:
+            // The link is fine; this one request was wrong.
+            return nil
         case .rejected(let rejection):
             self = rejection.losesPairing ? .pairingLost : .authError(code: rejection.rawCode)
         case .badServerSignature:
