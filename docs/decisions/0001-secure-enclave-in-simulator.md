@@ -2,7 +2,7 @@
 
 - **Пункт:** SPEC §9.1, `[проверить: доступность Secure Enclave в симуляторе]`.
 - **Этап:** 0. **Дата:** 2026-10-19.
-- **Статус:** закрыт прогоном на Mac владельца 2026-10-19: Xcode 27.1 (27A9275), симулятор iPhone 17 Pro, iOS 27.0 (24A5423a), Apple silicon. `SecureEnclave.isAvailable == true`, а не `false`, как ожидал первый вариант теста.
+- **Статус:** закрыт прогоном на Mac владельца 2026-10-19: Xcode 27, симулятор iPhone с iOS 27, Apple silicon. `SecureEnclave.isAvailable == true`, а не `false`, как ожидал первый вариант теста.
 
 ## Вопрос
 
@@ -28,4 +28,10 @@
 - В симуляторе (на этом Mac) Debug-сборка выбирает `SecureEnclaveKeyProvider`, поэтому путь Secure Enclave проверяется тестами в симуляторе. Код выбора не меняется: он смотрит на `isAvailable` во время выполнения.
 - `SoftwareKeyProvider` остаётся для Debug на машинах без Secure Enclave и для тестов, где нужен ключ с известным значением.
 - Ключи с биометрией (`.biometryCurrentSet`) в симуляторе этим не проверены: это вопрос этапа 1 вместе с Face ID в симуляторе.
+
+## Дополнение, этап 1 (2026-10-19)
+
+Прогон UI-теста pairing на Mac владельца: создание ключа Secure Enclave с `[.privateKeyUsage, .biometryCurrentSet]` в симуляторе падает с `LAError` -1020 «This call is not supported on iOS Simulator». Ключ без биометрии создаётся и подписывает (`KeyProviderTests.secureEnclaveKeySurvivesStoreAndSigns`).
+
+Поэтому в Debug-сборке для симулятора новые ключи — `SoftwareKeyProvider` (`#if DEBUG && targetEnvironment(simulator)`). Face ID в UI-тесте по-прежнему запрашивается перед подписью, и симулятор отвечает на него «совпадающим лицом». Путь Secure Enclave с биометрией проверяется только на iPhone. Приёмка этапа 1 (2026-10-19) пройдена: pairing по QR, ключи созданы, Face ID работает.
 

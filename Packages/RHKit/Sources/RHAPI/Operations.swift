@@ -1,0 +1,40 @@
+import RHCrypto
+
+/// A core API operation as contracts/api/openapi.yaml declares it (x-rh-op, x-rh-key).
+public struct CoreOperation: Equatable, Sendable {
+    public enum Method: String, Sendable {
+        case get = "GET"
+        case post = "POST"
+    }
+
+    public enum Auth: Equatable, Sendable {
+        /// Not signed: /v1/challenge.
+        case none
+        /// Signed with the key of this level after a challenge.
+        case signed(KeyLevel)
+        /// /v1/pair: key "normal", nonce = pairing code, signed by both the normal and the critical key.
+        case pairing
+    }
+
+    public let op: String
+    public let method: Method
+    public let path: String
+    public let auth: Auth
+
+    public init(op: String, method: Method, path: String, auth: Auth) {
+        self.op = op
+        self.method = method
+        self.path = path
+        self.auth = auth
+    }
+
+    public static let challenge = CoreOperation(op: "challenge", method: .post, path: "/v1/challenge", auth: .none)
+    public static let pair = CoreOperation(op: "pair", method: .post, path: "/v1/pair", auth: .pairing)
+    public static let ping = CoreOperation(op: "ping", method: .post, path: "/v1/ping", auth: .signed(.normal))
+    public static let status = CoreOperation(op: "status", method: .get, path: "/v1/status", auth: .signed(.normal))
+    public static let devicesList = CoreOperation(op: "devices.list", method: .get, path: "/v1/devices", auth: .signed(.normal))
+    public static let devicesRevoke = CoreOperation(
+        op: "devices.revoke", method: .post, path: "/v1/devices/revoke", auth: .signed(.critical)
+    )
+    public static let wsOpen = CoreOperation(op: "ws.open", method: .get, path: "/v1/ws", auth: .signed(.normal))
+}

@@ -13,7 +13,7 @@ iOS-приложение RemoteHands: SwiftUI, iOS 27, Swift 6. Что стро�
 ## Как проверять
 
 - Без Mac (Linux): `python3 scripts/check_project.py` (структура Xcode-проекта), `scripts/check-contracts.sh` (копия контрактов совпадает с RHServer).
-- На Mac (Xcode 27): `scripts/test.sh` — всё сразу: контракты, `swift test` для RHKit, `xcodebuild test` в симуляторе.
+- На Mac (Xcode 27): `scripts/test.sh` — всё сразу: контракты, `swift test` для RHKit, `xcodebuild test` в симуляторе. Для UI-теста pairing скрипт поднимает dev-ядро из `../RHServer` (`RH_SERVER_DIR`), сбрасывает Keychain симулятора и отвечает на Face ID «совпадающим лицом».
 - Тест-векторы из `contracts/vectors/` обязательны: если вектор не проходит, ошибка у нас, пока не доказано обратное с агентом сервера.
 
 ## Правила

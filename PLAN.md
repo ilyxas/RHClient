@@ -33,11 +33,11 @@
 | Проверка структуры pbxproj и plist скриптом | Secure Enclave, Face ID, камера, установка на iPhone |
 | Ревью `contracts/`, исследование `[проверить]` по документации | Физическая приёмка этапов 1, 4, 6 (SPEC §9.1) |
 
-Mac владельца (проверено 2026-10-19): macOS 27.2, arm64, Xcode 27.0 (27A5252f, установлен как `Xcode-beta.app`), Swift 6.4. SDK iOS 27.0 и iOS Simulator 27.0, runtime iOS 27.0, симуляторы iPhone 17 / 17 Pro; сертификат Apple Development есть; `xcodegen` и `uv` не установлены, `brew` есть.
+Mac владельца: Xcode 27 (iOS 27 SDK и симулятор iOS 27), Swift 6, Apple silicon, сертификат Apple Development; `uv` нужен для dev-ядра в UI-тестах. Точные версии и сборки в репозиторий не пишутся.
 
 Следствие: при И1-A каждый PR проверяет CI, и я чиню его сам; при И1-C каждый PR сначала проверяет владелец. Поэтому код я пишу маленькими PR, с самопроверкой всего, что проверяется без компилятора, и отчёт в PR явно разделяет «проверено CI/Mac» и «не проверено».
 
-Если владелец откроет `download.swift.org` в настройках сети среды, я смогу собирать и тестировать здесь платформонезависимую часть (`RHKit` без Security/SwiftUI: JCS, модели, валидатор страниц, выражения). Это ускоряет, но не заменяет И1.
+Платформонезависимую часть (`RHKit`, логику ключей и Face ID-сессии) я собираю и прогоняю в облаке: Swift для Linux, вместо CryptoKit там swift-crypto с тем же API, только в моей рабочей копии. Это ловит ошибки раньше, но не заменяет прогон на Mac.
 
 ## 2. Архитектура клиента (кратко)
 
@@ -46,11 +46,12 @@ RHClient.xcodeproj
 ├─ RHClient/              приложение, SwiftUI, iOS 27, Swift 6 (strict concurrency)
 │   ├─ App/               точка входа, таб-бар Home · Chat · Terminal · Log · Pages, Face ID-сессия
 │   ├─ Features/          Pairing, Home, Chat, Terminal, Log, Pages, Settings, Approval
+│   ├─ Keys/              KeyProvider (Secure Enclave; программный ключ только в Debug), Face ID-сессия, Keychain
 │   └─ UI/                единая библиотека компонентов (DESIGN.md): MetricCard, StatusRow,
 │                         ActionTile, … — из неё собраны и Home, и страницы rh.page/1
 ├─ Packages/RHKit/        локальный Swift Package, без UI
-│   ├─ RHCrypto           JCS (RFC 8785), KeyProvider, подпись запросов, проверка X-RH-Server-Sig
-│   ├─ RHAPI              HTTP-клиент, challenge, ошибки → состояние соединения, WebSocket
+│   ├─ RHCrypto           JCS (RFC 8785), подпись запросов (MessageSigner), проверка X-RH-Server-Sig, отпечаток
+│   ├─ RHAPI              операции, pairing-строка, HTTP-клиент, challenge, ошибки → состояние соединения, WebSocket
 │   ├─ RHPages            модели rh.page/1, строгий декодер, валидатор, выражения visibleWhen/enabledWhen
 │   └─ RHModels           значения data_id (number/string/bool/status/rows/text), журнал, approvals
 ├─ RHClientTests/ + Packages/RHKit/Tests/   юнит-тесты, контрактные тест-векторы
@@ -94,7 +95,7 @@ RHClient.xcodeproj
 
 ### Тест-векторы
 
-Самая важная часть контракта: одни и те же файлы гоняют тесты обеих сторон, расхождение сериализации ловится в первый день, а не на pairing с iPhone. Клиент проходит: `jcs.json` (scope `protocol`, этап 0), `ecdsa.json`, `request_build.json`, `server_sig.json`, `pairing.json` (этап 1), `ws_frames.json` (этап 3), хеш операции approval (этап 4), `pages/valid|invalid` (этап 5), `ssh_pubkey.json` (этап 6). `signed_requests.json` гоняет сервер; клиент берёт из него коды отказов для текстов в UI.
+Самая важная часть контракта: одни и те же файлы гоняют тесты обеих сторон, расхождение сериализации ловится в первый день, а не на pairing с iPhone. Клиент проходит: `jcs.json` (scope `protocol`, этап 0), `ecdsa.json`, `request_build.json`, `server_sig.json`, `pairing.json`, `ws_frames.json` (этап 1), хеш операции approval (этап 4), `pages/valid|invalid` (этап 5), `ssh_pubkey.json` (этап 6). `signed_requests.json` гоняет сервер; клиент берёт из него коды отказов для текстов в UI.
 
 ### Мок-сервер
 
@@ -268,9 +269,9 @@ RHClient.xcodeproj
 |---|---|---|---|
 | Secure Enclave в симуляторе | §9.1 | 0 | закрыт: есть, docs/decisions/0001 |
 | Xcode 27 на CI-раннерах (если И1-A) | — | 0 | проверить |
-| Переиспользование LAContext, `.biometryCurrentSet` | §4.1 | 1 | проверить |
-| `tailscale cert` и ATS (совместно с сервером) | §3.3 | 1 | проверить |
-| Заголовки на upgrade-запросе WebSocket | §4.4 | 1 | проверить |
+| Переиспользование LAContext, `.biometryCurrentSet` | §4.1 | 1 | закрыт: docs/decisions/0002, тип ошибки — на iPhone |
+| `tailscale cert` и ATS (совместно с сервером) | §3.3 | 1 | закрыт: docs/decisions/0004, подтвердить первым запросом с iPhone |
+| Заголовки на upgrade-запросе WebSocket | §4.4 | 1 | закрыт: docs/decisions/0003 |
 | Liquid Glass API в iOS 27 SDK | §8.1 | 2 | проверить |
 | Библиотека Markdown | §8.3 | 2→3 | проверить + утвердить |
 | Библиотека SSH с внешним подписантом, эмулятор терминала | §8.4 | 4→6 | проверить + утвердить |

@@ -417,7 +417,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Config/Debug-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = RemoteHands;
+				INFOPLIST_KEY_NSCameraUsageDescription = "The camera scans the pairing QR code that rhcore pair shows on your Mac.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Face ID unlocks the keys that sign every request to your Mac.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -442,6 +445,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = RemoteHands;
+				INFOPLIST_KEY_NSCameraUsageDescription = "The camera scans the pairing QR code that rhcore pair shows on your Mac.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Face ID unlocks the keys that sign every request to your Mac.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
