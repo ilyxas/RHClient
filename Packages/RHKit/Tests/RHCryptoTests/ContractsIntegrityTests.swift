@@ -1,7 +1,7 @@
 import Foundation
 import Testing
 
-/// The vendored contracts/ must match RHServer byte for byte (decided by Илья):
+/// The vendored contracts/ must match RHServer byte for byte (decided by the owner):
 /// every file is listed in MANIFEST.sha256 with its hash, nothing is missing or extra,
 /// and the manifest itself matches the root hash recorded in UPSTREAM at sync time.
 /// scripts/check-contracts.sh additionally compares against RHServer at that commit.
