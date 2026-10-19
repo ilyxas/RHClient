@@ -269,9 +269,9 @@ RHClient.xcodeproj
 |---|---|---|---|
 | Secure Enclave в симуляторе | §9.1 | 0 | закрыт: есть, docs/decisions/0001 |
 | Xcode 27 на CI-раннерах (если И1-A) | — | 0 | проверить |
-| Переиспользование LAContext, `.biometryCurrentSet` | §4.1 | 1 | проверить |
-| `tailscale cert` и ATS (совместно с сервером) | §3.3 | 1 | проверить |
-| Заголовки на upgrade-запросе WebSocket | §4.4 | 1 | проверить |
+| Переиспользование LAContext, `.biometryCurrentSet` | §4.1 | 1 | закрыт: docs/decisions/0002, тип ошибки — на iPhone |
+| `tailscale cert` и ATS (совместно с сервером) | §3.3 | 1 | закрыт: docs/decisions/0004, подтвердить первым запросом с iPhone |
+| Заголовки на upgrade-запросе WebSocket | §4.4 | 1 | закрыт: docs/decisions/0003 |
 | Liquid Glass API в iOS 27 SDK | §8.1 | 2 | проверить |
 | Библиотека Markdown | §8.3 | 2→3 | проверить + утвердить |
 | Библиотека SSH с внешним подписантом, эмулятор терминала | §8.4 | 4→6 | проверить + утвердить |
