@@ -22,7 +22,9 @@ struct JCSVectorTests {
     @Test func protocolScopeVectors() throws {
         let file = try JSONDecoder().decode(JCSVectorFile.self, from: ContractsLocation.data("vectors/jcs.json"))
         #expect(file.version == 1)
-        let vectors = file.vectors.filter { $0.scope == "protocol" }
+        // Protocol scope is mandatory; rejections from any scope must hold too, since the
+        // client's parser is stricter than full JCS (no fractions at all).
+        let vectors = file.vectors.filter { $0.scope == "protocol" || $0.expect_error == true }
         #expect(!vectors.isEmpty, "no protocol-scope vectors in contracts/vectors/jcs.json")
         for vector in vectors {
             if vector.expect_error == true {
