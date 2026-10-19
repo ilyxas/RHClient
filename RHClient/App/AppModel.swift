@@ -3,7 +3,7 @@ import Observation
 import RHAPI
 import RHCrypto
 
-/// App state for stage 1: keys, pairing, the signed link to the core.
+/// App state: keys, pairing, the signed link to the core, Home data (stage 2).
 @MainActor
 @Observable
 final class AppModel {
@@ -26,6 +26,10 @@ final class AppModel {
     private(set) var record: PairingRecord?
     private(set) var connection: ConnectionState?
     private(set) var status: StatusResponse?
+    /// Home data sources (``BuiltinData/home``) from the last refresh; empty until the first one.
+    private(set) var homeData: [String: DataResult] = [:]
+    /// Quick Access on Home; always empty until stage 5.
+    private(set) var quickItems: [QuickItem] = []
     private(set) var pairingProgress: PairingProgress?
     /// A failure worth a line on screen that does not change the phase (Face ID cancelled, …).
     private(set) var notice: String?
@@ -85,6 +89,11 @@ final class AppModel {
         case (_?, nil): lose()
         case (_?, _?): phase = .paired
         }
+        #if DEBUG
+        // A launch argument is for a phone that starts unpaired; a later Re-pair must not
+        // pick it up silently.
+        if record != nil { launchPairingUsed = true }
+        #endif
     }
 
     /// App became active: Face ID for the session if needed, then a fresh status.
@@ -100,13 +109,52 @@ final class AppModel {
 
     // MARK: - Signed calls
 
+    /// Status, Home data and Quick Access in parallel. Each part keeps its last value when
+    /// its own call fails, so one broken source does not blank the screen.
     func refresh() async {
         guard let client else { return }
-        do {
-            status = try await client.status()
+        async let status = Self.attempt { try await client.status() }
+        async let data = Self.attempt { try await client.data(ids: BuiltinData.home) }
+        async let quick = Self.attempt { try await client.quick() }
+        let results = await (status, data, quick)
+        var failure: (any Error)?
+        switch results.0 {
+        case .success(let value): self.status = value
+        case .failure(let error): failure = error
+        }
+        switch results.1 {
+        case .success(let value): homeData = value.values
+        case .failure(let error): failure = failure ?? error
+        }
+        switch results.2 {
+        case .success(let value): quickItems = value.items
+        case .failure(let error): failure = failure ?? error
+        }
+        if let failure {
+            handle(failure)
+        } else {
             connected()
+        }
+    }
+
+    /// One page of the Log feed; nil when the call failed (the reason is in `connection` or `notice`).
+    func log(_ request: LogRequest) async -> LogResponse? {
+        guard let client else { return nil }
+        do {
+            let page = try await client.log(request)
+            connected()
+            return page
         } catch {
             handle(error)
+            return nil
+        }
+    }
+
+    private nonisolated static func attempt<T: Sendable>(_ call: @Sendable () async throws -> T) async -> Result<T, any Error> {
+        do {
+            return .success(try await call())
+        } catch {
+            return .failure(error)
         }
     }
 
@@ -163,7 +211,11 @@ final class AppModel {
             return
         }
         guard let state = ConnectionState(error: error) else {
-            notice = String(describing: error)
+            if case CoreClientError.rejected(let rejection) = error {
+                notice = rejection.message
+            } else {
+                notice = String(describing: error)
+            }
             return
         }
         connection = state
@@ -174,6 +226,8 @@ final class AppModel {
         phase = .pairingLost
         connection = .pairingLost
         status = nil
+        homeData = [:]
+        quickItems = []
     }
 
     #if DEBUG
@@ -295,6 +349,8 @@ final class AppModel {
         pairingProgress = nil
         phase = .paired
         status = nil
+        homeData = [:]
+        quickItems = []
         connection = nil
         Task { await refresh() }
         return true

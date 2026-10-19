@@ -18,6 +18,8 @@ public struct CoreError: Error, Equatable, Sendable {
         case badPairCode = "bad_pair_code"
         case pairRejected = "pair_rejected"
         case peerMismatch = "peer_mismatch"
+        /// The signature checks passed but the body does not fit the operation (stage 2 operations onwards).
+        case badRequest = "bad_request"
         /// /v1/devices/revoke only.
         case notFound = "not_found"
     }

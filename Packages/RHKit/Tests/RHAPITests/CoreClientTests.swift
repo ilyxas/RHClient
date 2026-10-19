@@ -85,6 +85,47 @@ struct CoreClientTests {
         #expect(ConnectionState(error: try #require(error)) == .authError(code: "clock_skew"))
     }
 
+    @Test func dataGetSignsItsIDsInTheBody() async throws {
+        let core = try FakeCore(signer: signer)
+        let data = try await client(core).data(ids: BuiltinData.home)
+        #expect(data.values[BuiltinData.cpu]?.value?.number == 38.4)
+        let seen = try #require(core.seen.last)
+        #expect(seen.method == "POST")
+        #expect(seen.path == "/v1/data")
+        #expect(seen.object?["op"] == .string("data.get"))
+        #expect(seen.object?["key"] == .string("normal"))
+        #expect(seen.object?["body"] == .string(Digest.sha256Hex(seen.body)))
+        let sent = try JSONDecoder().decode([String: [String]].self, from: seen.body)
+        #expect(sent == ["ids": BuiltinData.home])
+    }
+
+    @Test func logAndQuickAreSignedReads() async throws {
+        let core = try FakeCore(signer: signer)
+        let page = try await client(core).log(LogRequest(filter: .errors, query: "ping", limit: 50))
+        #expect(page.entries.count == 2)
+        let log = try #require(core.seen.last)
+        #expect(log.method == "POST" && log.path == "/v1/log")
+        #expect(log.object?["op"] == .string("log.list"))
+        #expect(log.object?["body"] == .string(Digest.sha256Hex(log.body)))
+
+        let quick = try await client(core).quick()
+        #expect(quick.items.isEmpty)
+        let seen = try #require(core.seen.last)
+        #expect(seen.method == "GET" && seen.path == "/v1/quick")
+        #expect(seen.object?["op"] == .string("quick.list"))
+        #expect(seen.object?["body"] == .string(Digest.sha256Hex(Data())))
+    }
+
+    @Test func badRequestLeavesTheConnectionAlone() async throws {
+        let core = try FakeCore(signer: signer)
+        core.overrides.withLock { $0["/v1/log"] = (400, Data(#"{"error":{"code":"bad_request","message":"limit"}}"#.utf8)) }
+        let error = await #expect(throws: CoreClientError.self) { try await client(core).log(LogRequest()) }
+        guard case .rejected(let rejection)? = error else { Issue.record("\(String(describing: error))"); return }
+        #expect(rejection.code == .badRequest)
+        #expect(ConnectionState(error: rejection) == nil)
+        #expect(ConnectionState(error: try #require(error)) == nil)
+    }
+
     @Test func networkFailureIsUnreachable() async throws {
         let core = try FakeCore(signer: signer)
         core.unreachable.withLock { $0 = true }

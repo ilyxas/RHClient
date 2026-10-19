@@ -15,7 +15,7 @@ struct CoreErrorTests {
         let losing = ["unknown_device", "revoked_device"]
         for code in ["malformed_auth", "unknown_device", "revoked_device", "wrong_key_level", "op_mismatch",
                      "nonce_unknown", "nonce_used", "nonce_expired", "expired", "clock_skew", "body_mismatch",
-                     "bad_signature", "bad_pair_code", "pair_rejected", "peer_mismatch", "not_found"] {
+                     "bad_signature", "bad_pair_code", "pair_rejected", "peer_mismatch", "not_found", "bad_request"] {
             let error = CoreError(status: 403, rawCode: code, message: "")
             #expect(error.code != nil, "\(code) is known")
             #expect(error.losesPairing == losing.contains(code), "\(code)")
