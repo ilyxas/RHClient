@@ -2,7 +2,7 @@
 
 - **Пункт:** SPEC §9.1, `[проверить: доступность Secure Enclave в симуляторе]`.
 - **Этап:** 0. **Дата:** 2026-10-19.
-- **Статус:** закрыт прогоном на Mac владельца 2026-10-19: Xcode 27.1 (27A9275), симулятор iPhone 17 Pro, iOS 27.0 (24A5423a), Apple silicon. `SecureEnclave.isAvailable == true`, а не `false`, как ожидал первый вариант теста.
+- **Статус:** закрыт прогоном на Mac владельца 2026-10-19: Xcode 27, симулятор iPhone с iOS 27, Apple silicon. `SecureEnclave.isAvailable == true`, а не `false`, как ожидал первый вариант теста.
 
 ## Вопрос
 
