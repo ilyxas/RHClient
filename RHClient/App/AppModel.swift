@@ -184,6 +184,7 @@ final class AppModel {
     /// `connection` or `notice`).
     func sendToFriend(_ text: String) async -> FriendSendResponse? {
         guard let client else { return nil }
+        notice = nil  // a failure below must not show the reason of an earlier one
         do {
             let answer = try await client.sendToFriend(FriendSendRequest(text: text))
             connected()
