@@ -30,6 +30,8 @@ final class AppModel {
     private(set) var homeData: [String: DataResult] = [:]
     /// Quick Access on Home; always empty until stage 5.
     private(set) var quickItems: [QuickItem] = []
+    /// Questions of the Friend session waiting for a decision (friend.questions), oldest first.
+    private(set) var questions: [FriendQuestion] = []
     private(set) var pairingProgress: PairingProgress?
     /// A failure worth a line on screen that does not change the phase (Face ID cancelled, …).
     private(set) var notice: String?
@@ -109,14 +111,15 @@ final class AppModel {
 
     // MARK: - Signed calls
 
-    /// Status, Home data and Quick Access in parallel. Each part keeps its last value when
-    /// its own call fails, so one broken source does not blank the screen.
+    /// Status, Home data, Quick Access and Friend's questions in parallel. Each part keeps its
+    /// last value when its own call fails, so one broken source does not blank the screen.
     func refresh() async {
         guard let client else { return }
         async let status = Self.attempt { try await client.status() }
         async let data = Self.attempt { try await client.data(ids: BuiltinData.home) }
         async let quick = Self.attempt { try await client.quick() }
-        let results = await (status, data, quick)
+        async let asked = Self.attempt { try await client.friendQuestions() }
+        let results = await (status, data, quick, asked)
         var failure: (any Error)?
         switch results.0 {
         case .success(let value): self.status = value
@@ -128,6 +131,10 @@ final class AppModel {
         }
         switch results.2 {
         case .success(let value): quickItems = value.items
+        case .failure(let error): failure = failure ?? error
+        }
+        switch results.3 {
+        case .success(let value): questions = value.questions
         case .failure(let error): failure = failure ?? error
         }
         if let failure {
@@ -195,6 +202,40 @@ final class AppModel {
         }
     }
 
+    /// Only Friend's open questions; nil when the call failed.
+    func loadQuestions() async -> [FriendQuestion]? {
+        guard let client else { return nil }
+        do {
+            questions = try await client.friendQuestions().questions
+            connected()
+            return questions
+        } catch {
+            handle(error)
+            return nil
+        }
+    }
+
+    /// Decide one Friend question. Allow asks Face ID (critical key); deny does not. The
+    /// question leaves the list once the core accepted the decision; nil when it did not
+    /// (the reason is in `connection` or `notice`).
+    func decide(_ question: FriendQuestion, _ decision: FriendDecision) async -> FriendDecideResponse? {
+        guard let client else { return nil }
+        notice = nil
+        do {
+            let answer = try await client.decide(FriendDecideRequest(question: question, decision: decision))
+            questions.removeAll { $0.id == question.id }
+            connected()
+            return answer
+        } catch {
+            handle(error)
+            if case CoreClientError.rejected(let rejection) = error, rejection.code == .badRequest {
+                // Answered from another device, withdrawn, or changed: this question is gone.
+                questions.removeAll { $0.id == question.id }
+            }
+            return nil
+        }
+    }
+
     /// Critical key: Face ID every time. Revoking this phone ends in Pairing lost on the next call.
     func revoke(_ deviceID: String) async -> Bool {
         guard let client else { return false }
@@ -243,6 +284,7 @@ final class AppModel {
         status = nil
         homeData = [:]
         quickItems = []
+        questions = []
     }
 
     #if DEBUG
@@ -366,6 +408,7 @@ final class AppModel {
         status = nil
         homeData = [:]
         quickItems = []
+        questions = []
         connection = nil
         Task { await refresh() }
         return true

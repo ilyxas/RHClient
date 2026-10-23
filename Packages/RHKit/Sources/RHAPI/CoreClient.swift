@@ -127,6 +127,17 @@ public struct CoreClient: Sendable {
         try await call(.friendSend, body: message.encoded())
     }
 
+    /// What Friend is waiting for the owner to decide (friend.questions).
+    public func friendQuestions() async throws -> FriendQuestionsResponse {
+        try await call(.friendQuestions)
+    }
+
+    /// The owner's decision on one Friend question (friend.decide). Allow is signed with the
+    /// critical key, so Face ID is asked here; deny with the normal key.
+    public func decide(_ request: FriendDecideRequest) async throws -> FriendDecideResponse {
+        try await call(.friendDecide(request.decision), body: request.encoded())
+    }
+
     /// Headers for the /v1/ws upgrade and the nonce its frames are signed with.
     public func eventStreamRequest() async throws -> (request: URLRequest, nonce: String) {
         let nonce = try await challenge().nonce

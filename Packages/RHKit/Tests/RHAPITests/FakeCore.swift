@@ -109,6 +109,23 @@ final class FakeCore: HTTPTransport {
                   let id = doc["id"], !(doc["text"] ?? "").isEmpty
             else { return error(400, "bad_request", nonce: nonce, path: path) }
             return answer(200, Data(#"{"id":"\#(String(repeating: "a", count: 32))","message_id":"\#(id)","accepted_at":"2026-10-19T12:00:00Z"}"#.utf8), nonce: nonce, path: path)
+        case "/v1/friend/questions":
+            return answer(200, Data(Self.questionsExample.utf8), nonce: nonce, path: path)
+        case "/v1/friend/decide":
+            // The real core: the body must fit, the key level must fit the decision, and the
+            // decision must name the one open question exactly.
+            guard let doc = try? JSONDecoder().decode([String: String].self, from: body), doc["to"] == "Friend",
+                  let id = doc["id"], let decision = doc["decision"], ["allow", "deny"].contains(decision),
+                  let digest = doc["question_sha256"], let action = doc["action"]
+            else { return error(400, "bad_request", nonce: nonce, path: path) }
+            guard level == (decision == "allow" ? "critical" : "normal") else {
+                return error(401, "wrong_key_level", nonce: nonce, path: path)
+            }
+            let known = Self.question
+            guard id == known.id, digest == known.textSHA256, action == known.action else {
+                return error(400, "bad_request", nonce: nonce, path: path)
+            }
+            return answer(200, Data(#"{"id":"\#(String(repeating: "b", count: 32))","question_id":"\#(id)","decision":"\#(decision)","accepted_at":"2026-10-23T03:13:02Z"}"#.utf8), nonce: nonce, path: path)
         case "/v1/devices/revoke":
             let target = try JSONDecoder().decode([String: String].self, from: body)["device_id"]!
             return answer(200, Data(#"{"device_id":"\#(target)","status":"revoked"}"#.utf8), nonce: nonce, path: path)
@@ -120,6 +137,19 @@ final class FakeCore: HTTPTransport {
         default:
             return error(404, "not_found", nonce: nonce, path: path)
         }
+    }
+
+    /// The one open question of contracts/vectors/friend_decide.json.
+    static let question: FriendQuestion = {
+        struct File: Decodable { let question: FriendQuestion }
+        let data = try! ContractsLocation.data("vectors/friend_decide.json")
+        return try! JSONDecoder().decode(File.self, from: data).question
+    }()
+
+    /// friend.questions with that question.
+    static var questionsExample: String {
+        let q = try! JSONEncoder().encode(["id": question.id, "text": question.text, "action": question.action, "asked_at": question.askedAt])
+        return #"{"questions":[\#(String(decoding: q, as: UTF8.self))],"server_time":"2026-10-23T03:12:30Z"}"#
     }
 
     /// The data.get response example of contracts/api/openapi.yaml (stage 2), plus rows with `at`.
