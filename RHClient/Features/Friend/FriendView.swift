@@ -2,12 +2,15 @@ import RHAPI
 import RHCrypto
 import SwiftUI
 
-/// The Chat tab until the RemoteHands chat arrives at stage 3: Friend's questions waiting for
-/// a decision (friend.questions / friend.decide) and messages to Friend (friend.send).
+/// The Chat tab until the RemoteHands chat arrives at stage 3: the channel agent's questions
+/// waiting for a decision (friend.questions / friend.decide) and messages to it (friend.send).
+/// The agent is whoever `status.channel` names; every name on this tab is its title, so a
+/// switch on the Mac renames the tab with the next status. "friend" in identifiers is the
+/// mechanism's name, not the agent's.
 ///
-/// A question shows its text and the exact action in full, no truncation: what you allow is
-/// exactly that tool call, nothing wider. **Allow** signs with the critical key (a fresh Face ID),
-/// **Deny** with the normal key. The Mac keeps every decision as signed; the Friend gate lets
+/// A question shows who asks, its text and the exact action in full, no truncation: what you
+/// allow is exactly that tool call, nothing wider. **Allow** signs with the critical key (a fresh
+/// Face ID), **Deny** with the normal key. The Mac keeps every decision as signed; the gate lets
 /// exactly that call through once, within two minutes.
 struct FriendView: View {
     @Environment(AppModel.self) private var model
@@ -17,6 +20,9 @@ struct FriendView: View {
     @State private var draft = ""
     @State private var sending = false
 
+    /// The agent's name on screen; a neutral word until the first status names it.
+    private var agent: String { model.channel?.title ?? String(localized: "Agent") }
+
     var body: some View {
         NavigationStack {
             List {
@@ -25,6 +31,7 @@ struct FriendView: View {
                         ForEach(model.questions) { question in
                             QuestionCard(
                                 question: question,
+                                asker: agent,
                                 busy: deciding == question.id,
                                 decide: { decision in Task { await decide(question, decision) } }
                             )
@@ -35,7 +42,7 @@ struct FriendView: View {
                     } header: {
                         Text("Decisions")
                     } footer: {
-                        Text("Allow needs Face ID and lets Friend run exactly this call once, within two minutes.")
+                        Text("Allow needs Face ID and lets \(agent) run exactly this call once, within two minutes.")
                     }
                 }
                 Section {
@@ -45,7 +52,7 @@ struct FriendView: View {
                 } header: {
                     if !sent.isEmpty { Text("Messages") }
                 } footer: {
-                    Text("Signed on this iPhone. Friend checks the signature before reading.")
+                    Text("Signed on this iPhone. \(agent) checks the signature before reading.")
                 }
             }
             .listStyle(.plain)
@@ -55,15 +62,15 @@ struct FriendView: View {
             .overlay {
                 if sent.isEmpty && model.questions.isEmpty && decided.isEmpty {
                     ContentUnavailableView(
-                        "Message to Friend", systemImage: "checkmark.seal",
-                        description: Text("Friend sees it as a verified message from you. Questions from Friend appear here too.")
+                        "Message to \(agent)", systemImage: "checkmark.seal",
+                        description: Text("\(agent) sees it as a verified message from you. Questions from \(agent) appear here too.")
                     )
                 }
             }
             .refreshable { await model.loadQuestions() }
             .task { await model.loadQuestions() }
             .safeAreaInset(edge: .bottom) { composer }
-            .navigationTitle("Friend")
+            .navigationTitle(agent)
         }
     }
 
@@ -85,7 +92,7 @@ struct FriendView: View {
             .buttonStyle(.plain)
             .foregroundStyle(Palette.onAccent)
             .glassEffect(.regular.tint(Palette.accent).interactive(), in: .circle)
-            .disabled(sending || draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            .disabled(sending || model.channel == nil || draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             .accessibilityLabel("Send")
             .accessibilityIdentifier("friend.send")
         }
@@ -121,18 +128,22 @@ struct FriendView: View {
     }
 }
 
-/// One question: the full text, the exact action, Deny and Allow.
+/// One question: who asks, the full text, the exact action, Deny and Allow.
 private struct QuestionCard: View {
     let question: FriendQuestion
+    /// The channel agent's title: the owner sees whose action this is before deciding.
+    let asker: String
     let busy: Bool
     let decide: (FriendDecision) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
-                Label("Friend asks", systemImage: "questionmark.bubble")
-                    .font(.footnote.weight(.medium))
+                Label("\(asker) asks", systemImage: "questionmark.bubble")
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.orange)
+                    .accessibilityLabel(Text("\(asker) asks"))
+                    .accessibilityIdentifier("friend.question.asker")
                 Spacer()
                 if let at = ProtocolTime.parse(question.askedAt) {
                     Text(at, format: .relative(presentation: .named))

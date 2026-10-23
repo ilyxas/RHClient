@@ -94,7 +94,7 @@ final class FakeCore: HTTPTransport {
         case "/v1/ping":
             return answer(200, Data(#"{"pong": true, "server_time": "2026-10-19T12:00:00Z"}"#.utf8), nonce: nonce, path: path)
         case "/v1/status":
-            return answer(200, Data(#"{"mac_name":"Mac","core_version":"0.1.0","agent_version":null,"mode":"dev","server_time":"2026-10-19T12:00:00Z"}"#.utf8), nonce: nonce, path: path)
+            return answer(200, Data(#"{"mac_name":"Mac","core_version":"0.1.0","agent_version":null,"mode":"dev","server_time":"2026-10-19T12:00:00Z","channel":{"agent":"\#(Self.agent)","title":"\#(Self.agent)"}}"#.utf8), nonce: nonce, path: path)
         case "/v1/devices":
             let id = deviceKeys.deviceID
             return answer(200, Data(#"{"devices":[{"id":"\#(id)","name":"Мой iPhone","fingerprint":"\#(deviceKeys.fingerprint)","paired_at":"2026-10-19T12:00:00Z","status":"active","current":true}]}"#.utf8), nonce: nonce, path: path)
@@ -105,7 +105,7 @@ final class FakeCore: HTTPTransport {
         case "/v1/quick":
             return answer(200, Data(#"{"items":[]}"#.utf8), nonce: nonce, path: path)
         case "/v1/friend":
-            guard let doc = try? JSONDecoder().decode([String: String].self, from: body), doc["to"] == "Friend",
+            guard let doc = try? JSONDecoder().decode([String: String].self, from: body), doc["to"] == Self.agent,
                   let id = doc["id"], !(doc["text"] ?? "").isEmpty
             else { return error(400, "bad_request", nonce: nonce, path: path) }
             return answer(200, Data(#"{"id":"\#(String(repeating: "a", count: 32))","message_id":"\#(id)","accepted_at":"2026-10-19T12:00:00Z"}"#.utf8), nonce: nonce, path: path)
@@ -114,7 +114,7 @@ final class FakeCore: HTTPTransport {
         case "/v1/friend/decide":
             // The real core: the body must fit, the key level must fit the decision, and the
             // decision must name the one open question exactly.
-            guard let doc = try? JSONDecoder().decode([String: String].self, from: body), doc["to"] == "Friend",
+            guard let doc = try? JSONDecoder().decode([String: String].self, from: body), doc["to"] == Self.agent,
                   let id = doc["id"], let decision = doc["decision"], ["allow", "deny"].contains(decision),
                   let digest = doc["question_sha256"], let action = doc["action"]
             else { return error(400, "bad_request", nonce: nonce, path: path) }
@@ -138,6 +138,10 @@ final class FakeCore: HTTPTransport {
             return error(404, "not_found", nonce: nonce, path: path)
         }
     }
+
+    /// The channel agent, as the contract vectors name it (deliberately not the mechanism's
+    /// namesake): `status.channel` and the only `to` this core accepts.
+    static let agent = "Agent-Alpha"
 
     /// The one open question of contracts/vectors/friend_decide.json.
     static let question: FriendQuestion = {
@@ -164,7 +168,7 @@ final class FakeCore: HTTPTransport {
       "rh.activity":{"status":"active","type":"rows","at":"2026-10-19T12:00:00Z","value":[
         {"id":"1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d","title":"Paired Мой iPhone","subtitle":"fingerprint 3f2a 9c0d 1e4b 5a6f","at":"2026-10-19T11:58:00Z"}]},
       "agents.status":{"status":"active","type":"rows","at":"2026-10-19T12:00:00Z","value":[
-        {"id":"Friend","title":"Friend","subtitle":"observer","status":{"state":"ok","text":"monitoring"}},
+        {"id":"Agent-Alpha","title":"Agent-Alpha","subtitle":"observer","status":{"state":"ok","text":"monitoring"}},
         {"id":"RemoteHands","title":"RemoteHands","subtitle":"executor on the Mac","status":{"state":"off","text":"unknown"}}]},
       "render.queue":{"status":"pending"},
       "render.night":{"status":"error","message":"provider failed"}},

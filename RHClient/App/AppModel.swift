@@ -30,8 +30,11 @@ final class AppModel {
     private(set) var homeData: [String: DataResult] = [:]
     /// Quick Access on Home; always empty until stage 5.
     private(set) var quickItems: [QuickItem] = []
-    /// Questions of the Friend session waiting for a decision (friend.questions), oldest first.
+    /// Questions of the channel agent waiting for a decision (friend.questions), oldest first.
     private(set) var questions: [FriendQuestion] = []
+    /// The agent on the channel, from the last status; nil until the first one. Messages and
+    /// decisions are addressed to it and every name on the Chat tab is its title.
+    var channel: Channel? { status?.channel }
     private(set) var pairingProgress: PairingProgress?
     /// A failure worth a line on screen that does not change the phase (Face ID cancelled, …).
     private(set) var notice: String?
@@ -111,7 +114,7 @@ final class AppModel {
 
     // MARK: - Signed calls
 
-    /// Status, Home data, Quick Access and Friend's questions in parallel. Each part keeps its
+    /// Status, Home data, Quick Access and the agent's questions in parallel. Each part keeps its
     /// last value when its own call fails, so one broken source does not blank the screen.
     func refresh() async {
         guard let client else { return }
@@ -187,13 +190,17 @@ final class AppModel {
         }
     }
 
-    /// A signed message to the Friend session; nil when it was not accepted (the reason is in
-    /// `connection` or `notice`).
+    /// A signed message to the channel agent; nil when it was not accepted (the reason is in
+    /// `connection` or `notice`). Nothing is sent before a status has named the agent.
     func sendToFriend(_ text: String) async -> FriendSendResponse? {
         guard let client else { return nil }
         notice = nil  // a failure below must not show the reason of an earlier one
+        guard let channel else {
+            notice = String(localized: "The Mac has not said which agent is on the channel yet.")
+            return nil
+        }
         do {
-            let answer = try await client.sendToFriend(FriendSendRequest(text: text))
+            let answer = try await client.sendToFriend(FriendSendRequest(text: text, to: channel.agent))
             connected()
             return answer
         } catch {
@@ -202,7 +209,7 @@ final class AppModel {
         }
     }
 
-    /// Only Friend's open questions; nil when the call failed.
+    /// Only the agent's open questions; nil when the call failed.
     func loadQuestions() async -> [FriendQuestion]? {
         guard let client else { return nil }
         do {
@@ -215,14 +222,20 @@ final class AppModel {
         }
     }
 
-    /// Decide one Friend question. Allow asks Face ID (critical key); deny does not. The
+    /// Decide one question of the agent. Allow asks Face ID (critical key); deny does not. The
     /// question leaves the list once the core accepted the decision; nil when it did not
     /// (the reason is in `connection` or `notice`).
     func decide(_ question: FriendQuestion, _ decision: FriendDecision) async -> FriendDecideResponse? {
         guard let client else { return nil }
         notice = nil
+        guard let channel else {
+            notice = String(localized: "The Mac has not said which agent is on the channel yet.")
+            return nil
+        }
         do {
-            let answer = try await client.decide(FriendDecideRequest(question: question, decision: decision))
+            let answer = try await client.decide(
+                FriendDecideRequest(question: question, decision: decision, to: channel.agent)
+            )
             questions.removeAll { $0.id == question.id }
             connected()
             return answer

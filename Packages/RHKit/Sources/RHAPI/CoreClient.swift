@@ -121,18 +121,18 @@ public struct CoreClient: Sendable {
         try await call(.quickList)
     }
 
-    /// A message to the Friend session (friend.send). The core keeps the request as signed,
-    /// so Friend checks this phone's signature, not the core's word.
+    /// A message to the channel agent (friend.send). The core keeps the request as signed,
+    /// so the agent checks this phone's signature, not the core's word.
     public func sendToFriend(_ message: FriendSendRequest) async throws -> FriendSendResponse {
         try await call(.friendSend, body: message.encoded())
     }
 
-    /// What Friend is waiting for the owner to decide (friend.questions).
+    /// What the channel agent is waiting for the owner to decide (friend.questions).
     public func friendQuestions() async throws -> FriendQuestionsResponse {
         try await call(.friendQuestions)
     }
 
-    /// The owner's decision on one Friend question (friend.decide). Allow is signed with the
+    /// The owner's decision on one question of the agent (friend.decide). Allow is signed with the
     /// critical key, so Face ID is asked here; deny with the normal key.
     public func decide(_ request: FriendDecideRequest) async throws -> FriendDecideResponse {
         try await call(.friendDecide(request.decision), body: request.encoded())

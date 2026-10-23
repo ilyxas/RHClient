@@ -17,6 +17,8 @@ final class FriendSendTests: XCTestCase {
         XCTAssertTrue(waitFor(app.staticTexts["home.connection"], label: "Connected · Secure session", timeout: 90))
 
         app.tabBars.buttons["Chat"].tap()
+        // Addressed to the dev core's channel agent (status.channel), not to a built-in name.
+        XCTAssertTrue(waitFor(app.navigationBars["Agent-Alpha"], timeout: 10))
         let input = app.descendants(matching: .any)["friend.input"].firstMatch
         XCTAssertTrue(waitFor(input, timeout: 10))
         input.tap()
