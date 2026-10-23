@@ -178,3 +178,101 @@ public struct FriendSendResponse: Decodable, Equatable, Sendable {
         case acceptedAt = "accepted_at"
     }
 }
+
+// MARK: - friend.questions / friend.decide
+
+/// A question the Friend session asked before a protected action. `action` is canonical JSON
+/// of the exact tool call; the phone shows it as is and signs it as is.
+public struct FriendQuestion: Decodable, Equatable, Sendable, Identifiable {
+    public let id: String
+    public let text: String
+    public let action: String
+    public let askedAt: String
+
+    public init(id: String, text: String, action: String, askedAt: String) {
+        self.id = id
+        self.text = text
+        self.action = action
+        self.askedAt = askedAt
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id, text, action
+        case askedAt = "asked_at"
+    }
+
+    /// sha256 of the text as shown (UTF-8): what the decision names.
+    public var textSHA256: String {
+        Digest.sha256Hex(Data(text.utf8))
+    }
+
+    /// The tool the action names, for a one-line summary; nil when the action is not readable.
+    public var tool: String? {
+        guard case .object(let members)? = try? JCS.parse(action), case .string(let tool)? = members["tool"] else { return nil }
+        return tool
+    }
+}
+
+public struct FriendQuestionsResponse: Decodable, Equatable, Sendable {
+    /// Oldest first.
+    public let questions: [FriendQuestion]
+    public let serverTime: String
+
+    enum CodingKeys: String, CodingKey {
+        case questions
+        case serverTime = "server_time"
+    }
+}
+
+public enum FriendDecision: String, Codable, Equatable, Sendable {
+    case allow
+    case deny
+
+    /// allow: critical (fresh Face ID); deny: normal.
+    public var keyLevel: KeyLevel {
+        self == .allow ? .critical : .normal
+    }
+}
+
+/// friend.decide body: the question answered, the hash of its text as shown, its action unchanged.
+public struct FriendDecideRequest: Encodable, Equatable, Sendable {
+    public let to: String
+    public let id: String
+    public let questionSHA256: String
+    public let action: String
+    public let decision: FriendDecision
+
+    public init(question: FriendQuestion, decision: FriendDecision) {
+        self.to = "Friend"
+        self.id = question.id
+        self.questionSHA256 = question.textSHA256
+        self.action = question.action
+        self.decision = decision
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case to, id, action, decision
+        case questionSHA256 = "question_sha256"
+    }
+
+    /// Sorted keys, no spaces, UTF-8 as is — the encoding of contracts/vectors/friend_decide.json.
+    public func encoded() throws -> Data {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        return try encoder.encode(self)
+    }
+}
+
+public struct FriendDecideResponse: Decodable, Equatable, Sendable {
+    /// Where the core keeps the signed decision; the Friend session sees ⟦rh:<id>⟧.
+    public let id: String
+    public let questionID: String
+    public let decision: FriendDecision
+    public let acceptedAt: String
+
+    enum CodingKeys: String, CodingKey {
+        case id, decision
+        case questionID = "question_id"
+        case acceptedAt = "accepted_at"
+    }
+}

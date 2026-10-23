@@ -2,22 +2,48 @@ import RHAPI
 import RHCrypto
 import SwiftUI
 
-/// Messages to the Friend session (friend.send). Each one is signed with the normal key;
-/// the Mac keeps it as signed and Friend checks the signature itself. Shown in the Chat
-/// tab until the RemoteHands chat arrives at stage 3. The list lives only while the app runs.
+/// The Chat tab until the RemoteHands chat arrives at stage 3: Friend's questions waiting for
+/// a decision (friend.questions / friend.decide) and messages to Friend (friend.send).
+///
+/// A question shows its text and the exact action in full, no truncation: what you allow is
+/// exactly that tool call, nothing wider. **Allow** signs with the critical key (a fresh Face ID),
+/// **Deny** with the normal key. The Mac keeps every decision as signed; the Friend gate lets
+/// exactly that call through once, within two minutes.
 struct FriendView: View {
     @Environment(AppModel.self) private var model
     @State private var sent: [SentMessage] = []
+    @State private var decided: [DecidedQuestion] = []
+    @State private var deciding: String?
     @State private var draft = ""
     @State private var sending = false
 
     var body: some View {
         NavigationStack {
             List {
+                if !model.questions.isEmpty || !decided.isEmpty {
+                    Section {
+                        ForEach(model.questions) { question in
+                            QuestionCard(
+                                question: question,
+                                busy: deciding == question.id,
+                                decide: { decision in Task { await decide(question, decision) } }
+                            )
+                        }
+                        ForEach(decided) { item in
+                            DecidedRow(item: item)
+                        }
+                    } header: {
+                        Text("Decisions")
+                    } footer: {
+                        Text("Allow needs Face ID and lets Friend run exactly this call once, within two minutes.")
+                    }
+                }
                 Section {
                     ForEach(sent) { message in
                         SentMessageRow(message: message)
                     }
+                } header: {
+                    if !sent.isEmpty { Text("Messages") }
                 } footer: {
                     Text("Signed on this iPhone. Friend checks the signature before reading.")
                 }
@@ -27,13 +53,15 @@ struct FriendView: View {
             .scrollContentBackground(.hidden)
             .background { AppBackground() }
             .overlay {
-                if sent.isEmpty {
+                if sent.isEmpty && model.questions.isEmpty && decided.isEmpty {
                     ContentUnavailableView(
                         "Message to Friend", systemImage: "checkmark.seal",
-                        description: Text("Friend sees it as a verified message from you.")
+                        description: Text("Friend sees it as a verified message from you. Questions from Friend appear here too.")
                     )
                 }
             }
+            .refreshable { await model.loadQuestions() }
+            .task { await model.loadQuestions() }
             .safeAreaInset(edge: .bottom) { composer }
             .navigationTitle("Friend")
         }
@@ -77,6 +105,141 @@ struct FriendView: View {
             draft = ""
         } else {
             sent[index].state = .failed(model.notice ?? model.connection?.title ?? String(localized: "Not sent"))
+        }
+    }
+
+    private func decide(_ question: FriendQuestion, _ decision: FriendDecision) async {
+        guard deciding == nil else { return }
+        deciding = question.id
+        defer { deciding = nil }
+        if let answer = await model.decide(question, decision) {
+            decided.insert(DecidedQuestion(question: question, decision: decision, acceptedAt: answer.acceptedAt), at: 0)
+        } else if !model.questions.contains(where: { $0.id == question.id }) {
+            // Gone from the list without our decision: answered elsewhere or withdrawn.
+            decided.insert(DecidedQuestion(question: question, decision: nil, acceptedAt: nil), at: 0)
+        }
+    }
+}
+
+/// One question: the full text, the exact action, Deny and Allow.
+private struct QuestionCard: View {
+    let question: FriendQuestion
+    let busy: Bool
+    let decide: (FriendDecision) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline) {
+                Label("Friend asks", systemImage: "questionmark.bubble")
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(.orange)
+                Spacer()
+                if let at = ProtocolTime.parse(question.askedAt) {
+                    Text(at, format: .relative(presentation: .named))
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+            }
+            Text(question.text)
+                .font(.body)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .textSelection(.enabled)
+                .accessibilityIdentifier("friend.question.text")
+            VStack(alignment: .leading, spacing: 4) {
+                Text(question.tool.map { "Exact action · \($0)" } ?? "Exact action")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text(question.action)
+                    .font(.system(.footnote, design: .monospaced))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .textSelection(.enabled)
+                    .padding(10)
+                    .background(.quaternary.opacity(0.5), in: .rect(cornerRadius: 10))
+                    .accessibilityIdentifier("friend.question.action")
+            }
+            HStack(spacing: 12) {
+                Button(role: .cancel) {
+                    decide(.deny)
+                } label: {
+                    Label("Deny", systemImage: "xmark")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .accessibilityIdentifier("friend.deny")
+                Button {
+                    decide(.allow)
+                } label: {
+                    Label("Allow", systemImage: busy ? "ellipsis" : "faceid")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(Palette.accent)
+                .foregroundStyle(Palette.onAccent)
+                .accessibilityIdentifier("friend.allow")
+            }
+            .disabled(busy)
+            .controlSize(.large)
+        }
+        .padding(.vertical, 6)
+        .listRowBackground(Color.clear)
+        // No identifier on the stack: it would make the card one element and hide the text,
+        // action and buttons from accessibility (and from the UI test).
+    }
+}
+
+/// A question this phone has answered (or that went away), kept while the app runs.
+struct DecidedQuestion: Identifiable, Equatable {
+    let id = UUID()
+    let question: FriendQuestion
+    /// nil: the question left the list without a decision from this phone.
+    let decision: FriendDecision?
+    let acceptedAt: String?
+}
+
+private struct DecidedRow: View {
+    let item: DecidedQuestion
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(item.question.text)
+                .font(.body)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Label(status, systemImage: icon)
+                .font(.footnote)
+                .foregroundStyle(color)
+        }
+        .padding(.vertical, 4)
+        .listRowBackground(Color.clear)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("friend.decided")
+    }
+
+    private var time: String {
+        item.acceptedAt.flatMap { ProtocolTime.parse($0) }.map { $0.formatted(date: .omitted, time: .standard) } ?? ""
+    }
+
+    private var status: String {
+        switch item.decision {
+        case .allow?: String(localized: "Allowed · accepted by the Mac · \(time)")
+        case .deny?: String(localized: "Denied · accepted by the Mac · \(time)")
+        case nil: String(localized: "No longer open")
+        }
+    }
+
+    private var icon: String {
+        switch item.decision {
+        case .allow?: "checkmark.seal"
+        case .deny?: "xmark.seal"
+        case nil: "clock.badge.xmark"
+        }
+    }
+
+    private var color: Color {
+        switch item.decision {
+        case .allow?: Palette.ok
+        case .deny?: .secondary
+        case nil: .secondary
         }
     }
 }

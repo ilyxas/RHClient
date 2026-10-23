@@ -43,4 +43,13 @@ public struct CoreOperation: Equatable, Sendable {
     public static let quickList = CoreOperation(op: "quick.list", method: .get, path: "/v1/quick", auth: .signed(.normal))
     /// A message to the Friend session; the Friend verifier re-checks this signature itself.
     public static let friendSend = CoreOperation(op: "friend.send", method: .post, path: "/v1/friend", auth: .signed(.normal))
+    /// Open questions of the Friend session: text and the exact action, shown in full.
+    public static let friendQuestions = CoreOperation(
+        op: "friend.questions", method: .get, path: "/v1/friend/questions", auth: .signed(.normal)
+    )
+    /// The owner's decision. The key level follows the decision: allow needs the critical key
+    /// (a fresh Face ID), deny the normal one; the core refuses the other way round.
+    public static func friendDecide(_ decision: FriendDecision) -> CoreOperation {
+        CoreOperation(op: "friend.decide", method: .post, path: "/v1/friend/decide", auth: .signed(decision.keyLevel))
+    }
 }

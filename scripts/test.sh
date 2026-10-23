@@ -100,6 +100,8 @@ if [[ -d "$SERVER_DIR" ]] && command -v uv >/dev/null; then
     lsof -nP -iTCP:"$DEV_PORT" -sTCP:LISTEN >/dev/null 2>&1 && [[ -s "$PAIRING_FILE" ]] \
         || { echo "dev core did not start:"; cat "$DEV_DATA.log"; exit 1; }
     export TEST_RUNNER_RH_PAIRING_FILE="$PAIRING_FILE"
+    # The Friend decide UI test puts a question to the core the way rh-friend-ask does.
+    export TEST_RUNNER_RH_ADMIN_SOCKET="$DEV_DATA/admin.sock"
 else
     echo "== no RHServer at $SERVER_DIR (or no uv): the pairing UI test is skipped"
 fi
