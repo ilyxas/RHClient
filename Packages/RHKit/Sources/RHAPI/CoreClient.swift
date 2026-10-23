@@ -121,6 +121,12 @@ public struct CoreClient: Sendable {
         try await call(.quickList)
     }
 
+    /// A message to the Friend session (friend.send). The core keeps the request as signed,
+    /// so Friend checks this phone's signature, not the core's word.
+    public func sendToFriend(_ message: FriendSendRequest) async throws -> FriendSendResponse {
+        try await call(.friendSend, body: message.encoded())
+    }
+
     /// Headers for the /v1/ws upgrade and the nonce its frames are signed with.
     public func eventStreamRequest() async throws -> (request: URLRequest, nonce: String) {
         let nonce = try await challenge().nonce

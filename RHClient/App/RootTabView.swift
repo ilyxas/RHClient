@@ -36,6 +36,7 @@ struct RootTabView: View {
                 Tab(tab.title, systemImage: tab.systemImage, value: tab) {
                     switch tab {
                     case .home: HomeView()
+                    case .chat: FriendView()
                     case .log: LogView()
                     default: PlaceholderScreen(tab: tab)
                     }

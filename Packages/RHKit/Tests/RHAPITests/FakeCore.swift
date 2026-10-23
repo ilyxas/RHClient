@@ -104,6 +104,11 @@ final class FakeCore: HTTPTransport {
             return answer(200, Data(Self.logExample.utf8), nonce: nonce, path: path)
         case "/v1/quick":
             return answer(200, Data(#"{"items":[]}"#.utf8), nonce: nonce, path: path)
+        case "/v1/friend":
+            guard let doc = try? JSONDecoder().decode([String: String].self, from: body), doc["to"] == "Friend",
+                  let id = doc["id"], !(doc["text"] ?? "").isEmpty
+            else { return error(400, "bad_request", nonce: nonce, path: path) }
+            return answer(200, Data(#"{"id":"\#(String(repeating: "a", count: 32))","message_id":"\#(id)","accepted_at":"2026-10-19T12:00:00Z"}"#.utf8), nonce: nonce, path: path)
         case "/v1/devices/revoke":
             let target = try JSONDecoder().decode([String: String].self, from: body)["device_id"]!
             return answer(200, Data(#"{"device_id":"\#(target)","status":"revoked"}"#.utf8), nonce: nonce, path: path)

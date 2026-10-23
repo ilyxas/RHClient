@@ -145,3 +145,36 @@ public struct RevokeResponse: Decodable, Equatable, Sendable {
         case status
     }
 }
+
+/// friend.send body: `to` is always "Friend"; `id` is this phone's message id.
+public struct FriendSendRequest: Encodable, Equatable, Sendable {
+    public let id: String
+    public let text: String
+    public let to: String
+
+    public init(id: String = UUID().uuidString, text: String) {
+        self.id = id
+        self.text = text
+        self.to = "Friend"
+    }
+
+    /// Sorted keys, no spaces, UTF-8 as is — the encoding of contracts/vectors/friend.json.
+    public func encoded() throws -> Data {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        return try encoder.encode(self)
+    }
+}
+
+public struct FriendSendResponse: Decodable, Equatable, Sendable {
+    /// Where the core keeps the signed request; the Friend session sees ⟦rh:<id>⟧.
+    public let id: String
+    public let messageID: String
+    public let acceptedAt: String
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case messageID = "message_id"
+        case acceptedAt = "accepted_at"
+    }
+}
