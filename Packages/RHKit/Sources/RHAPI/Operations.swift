@@ -41,4 +41,6 @@ public struct CoreOperation: Equatable, Sendable {
     public static let dataGet = CoreOperation(op: "data.get", method: .post, path: "/v1/data", auth: .signed(.normal))
     public static let logList = CoreOperation(op: "log.list", method: .post, path: "/v1/log", auth: .signed(.normal))
     public static let quickList = CoreOperation(op: "quick.list", method: .get, path: "/v1/quick", auth: .signed(.normal))
+    /// A message to the Friend session; the Friend verifier re-checks this signature itself.
+    public static let friendSend = CoreOperation(op: "friend.send", method: .post, path: "/v1/friend", auth: .signed(.normal))
 }

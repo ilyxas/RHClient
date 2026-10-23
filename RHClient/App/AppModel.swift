@@ -180,6 +180,20 @@ final class AppModel {
         }
     }
 
+    /// A signed message to the Friend session; nil when it was not accepted (the reason is in
+    /// `connection` or `notice`).
+    func sendToFriend(_ text: String) async -> FriendSendResponse? {
+        guard let client else { return nil }
+        do {
+            let answer = try await client.sendToFriend(FriendSendRequest(text: text))
+            connected()
+            return answer
+        } catch {
+            handle(error)
+            return nil
+        }
+    }
+
     /// Critical key: Face ID every time. Revoking this phone ends in Pairing lost on the next call.
     func revoke(_ deviceID: String) async -> Bool {
         guard let client else { return false }
