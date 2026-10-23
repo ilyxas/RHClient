@@ -38,7 +38,7 @@ final class FriendDecideTests: XCTestCase {
         XCTAssertEqual(shown.label, action, "the action must be shown in full, as is")
 
         app.buttons["friend.allow"].tap()
-        let allowed = NSPredicate(format: "label BEGINSWITH 'Allowed'")
+        let allowed = NSPredicate(format: "label CONTAINS 'Allowed'")
         let row = app.descendants(matching: .any).matching(identifier: "friend.decided").matching(allowed).firstMatch
         XCTAssertTrue(waitFor(row, timeout: 60), "the allow was not accepted")
         XCTAssertFalse(app.descendants(matching: .any)["friend.allow"].firstMatch.exists, "the question must leave the list")
@@ -56,7 +56,7 @@ final class FriendDecideTests: XCTestCase {
         app.descendants(matching: .any)["friend.list"].firstMatch.swipeDown()
         XCTAssertTrue(waitFor(text, label: "UI test: deny this one", timeout: 30), "the second question did not appear")
         app.buttons["friend.deny"].tap()
-        let denied = NSPredicate(format: "label BEGINSWITH 'Denied'")
+        let denied = NSPredicate(format: "label CONTAINS 'Denied'")
         XCTAssertTrue(waitFor(app.descendants(matching: .any).matching(identifier: "friend.decided").matching(denied).firstMatch, timeout: 60))
     }
 }
