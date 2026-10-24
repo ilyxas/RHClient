@@ -42,6 +42,8 @@ final class FakeCore: HTTPTransport {
     }
 
     var seen: [Seen] { state.withLock { $0.seen } }
+    /// What /v1/friend accepted: (spool id, message id, text, kind, re).
+    let messages = Mutex<[(String, String, String, String, String?)]>([])
 
     func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
         if unreachable.withLock({ $0 }) { throw URLError(.notConnectedToInternet) }
@@ -105,10 +107,21 @@ final class FakeCore: HTTPTransport {
         case "/v1/quick":
             return answer(200, Data(#"{"items":[]}"#.utf8), nonce: nonce, path: path)
         case "/v1/friend":
+            // The real core: to, id, text and at most kind (question | task) and re (a spool id).
             guard let doc = try? JSONDecoder().decode([String: String].self, from: body), doc["to"] == Self.agent,
-                  let id = doc["id"], !(doc["text"] ?? "").isEmpty
+                  let id = doc["id"], !(doc["text"] ?? "").isEmpty,
+                  Set(doc.keys).isSubset(of: ["to", "id", "text", "kind", "re"]),
+                  doc["kind"] == nil || ["question", "task"].contains(doc["kind"]!),
+                  doc["re"] == nil || (doc["re"]!.count == 32 && doc["re"]!.allSatisfy { $0.isHexDigit && !$0.isUppercase })
             else { return error(400, "bad_request", nonce: nonce, path: path) }
-            return answer(200, Data(#"{"id":"\#(String(repeating: "a", count: 32))","message_id":"\#(id)","accepted_at":"2026-10-19T12:00:00Z"}"#.utf8), nonce: nonce, path: path)
+            let sid = String(repeating: "a", count: 32)
+            messages.withLock { $0.append((sid, id, doc["text"]!, doc["kind"] ?? "question", doc["re"])) }
+            return answer(200, Data(#"{"id":"\#(sid)","message_id":"\#(id)","accepted_at":"2026-10-19T12:00:00Z"}"#.utf8), nonce: nonce, path: path)
+        case "/v1/friend/messages":
+            guard let doc = try? JSONDecoder().decode([String: Int].self, from: body),
+                  Set(doc.keys).isSubset(of: ["since", "limit"]), (doc["since"] ?? 0) >= 0, (1...200).contains(doc["limit"] ?? 50)
+            else { return error(400, "bad_request", nonce: nonce, path: path) }
+            return answer(200, Data(Self.messagesExample.utf8), nonce: nonce, path: path)
         case "/v1/friend/questions":
             return answer(200, Data(Self.questionsExample.utf8), nonce: nonce, path: path)
         case "/v1/friend/decide":
@@ -151,6 +164,11 @@ final class FakeCore: HTTPTransport {
     }()
 
     /// friend.questions with that question.
+    /// The friend.messages example of contracts/api/openapi.yaml, plus one open task that follows it up.
+    static let messagesExample = #"""
+    {"messages":[{"id":"2f6c0d1e4b5a6f708192837465564700","seq":7,"message_id":"m-1","device":"3f2a9c0d1e4b5a6f7081928374655647","agent":"Agent-Alpha","kind":"question","text":"Is there a reason the RAM is so full right now?","accepted_at":"2026-10-25T09:12:05Z","state":"answered","received_at":"2026-10-25T09:12:07Z","closed_at":"2026-10-25T09:12:41Z","replies":[{"seq":6,"kind":"final","text":"Xcode holds 9 GB after the last build; nothing else is unusual. Want me to quit it?","at":"2026-10-25T09:12:41Z"}]},{"id":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","seq":9,"message_id":"m-2","device":"3f2a9c0d1e4b5a6f7081928374655647","agent":"Agent-Alpha","kind":"task","re":"2f6c0d1e4b5a6f708192837465564700","text":"go ahead","accepted_at":"2026-10-25T09:13:00Z","state":"received","received_at":"2026-10-25T09:13:02Z","replies":[{"seq":8,"kind":"progress","text":"quitting Xcode","at":"2026-10-25T09:13:10Z"}]}],"next":9,"more":false,"server_time":"2026-10-25T09:13:30Z"}
+    """#
+
     static var questionsExample: String {
         let q = try! JSONEncoder().encode(["id": question.id, "text": question.text, "action": question.action, "asked_at": question.askedAt])
         return #"{"questions":[\#(String(decoding: q, as: UTF8.self))],"server_time":"2026-10-23T03:12:30Z"}"#

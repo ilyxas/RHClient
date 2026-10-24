@@ -161,17 +161,29 @@ public struct RevokeResponse: Decodable, Equatable, Sendable {
     }
 }
 
+/// What the owner asks for. A question is answered in text (the agent's gate lets read-only tools
+/// through and routes anything else through a decision); a task lets the agent work.
+public enum MessageKind: String, Codable, Equatable, Sendable, CaseIterable {
+    case question
+    case task
+}
+
 /// friend.send body: `to` is the channel agent (`status.channel.agent`); `id` is this phone's
-/// message id. "friend" names the mechanism, not the agent.
+/// message id; `kind` (default question) and `re` (the message this one follows up, "make it a
+/// task") are only in the body when set. "friend" names the mechanism, not the agent.
 public struct FriendSendRequest: Encodable, Equatable, Sendable {
     public let id: String
     public let text: String
     public let to: String
+    public let kind: MessageKind?
+    public let re: String?
 
-    public init(id: String = UUID().uuidString, text: String, to agent: String) {
+    public init(id: String = UUID().uuidString, text: String, to agent: String, kind: MessageKind? = nil, re: String? = nil) {
         self.id = id
         self.text = text
         self.to = agent
+        self.kind = kind
+        self.re = re
     }
 
     /// Sorted keys, no spaces, UTF-8 as is — the encoding of contracts/vectors/friend.json.
@@ -192,6 +204,132 @@ public struct FriendSendResponse: Decodable, Equatable, Sendable {
         case id
         case messageID = "message_id"
         case acceptedAt = "accepted_at"
+    }
+}
+
+// MARK: - friend.messages
+
+/// friend.messages body: everything changed after `since` (the `next` of the previous answer).
+public struct FriendMessagesRequest: Encodable, Equatable, Sendable {
+    public var since: Int
+    public var limit: Int
+
+    public init(since: Int = 0, limit: Int = 50) {
+        self.since = since
+        self.limit = limit
+    }
+}
+
+/// One reply of the agent to an owner's message: progress on the way, or the final answer.
+public struct FriendReply: Codable, Equatable, Sendable, Identifiable {
+    public enum Kind: String, Codable, Equatable, Sendable {
+        case progress
+        case final
+    }
+
+    public let seq: Int
+    public let kind: Kind
+    public let text: String
+    public let at: String
+
+    public var id: Int { seq }
+
+    public init(seq: Int, kind: Kind, text: String, at: String) {
+        self.seq = seq
+        self.kind = kind
+        self.text = text
+        self.at = at
+    }
+}
+
+/// An owner's message as the core keeps it: its state and the agent's replies. The states after
+/// accepted, the reject code and the replies are what the agent side reported over the Mac's
+/// local socket, unsigned; accepted and superseded are the core's own.
+public struct FriendMessage: Codable, Equatable, Sendable, Identifiable {
+    public enum State: String, Codable, Equatable, Sendable {
+        /// The core has it; the bridge delivers the pointer to the agent's session.
+        case accepted
+        /// The agent-side verifier delivered it to the session.
+        case received
+        /// The agent asked the owner a decision since; the reply so far is progress.
+        case waiting
+        /// The final reply is in `replies`.
+        case answered
+        /// The verifier blocked it; `rejectCode` says why.
+        case rejected
+        /// A newer message from the owner replaced it; `supersededBy` names it.
+        case superseded
+
+        /// The agent still owes an answer.
+        public var isOpen: Bool { self == .accepted || self == .received || self == .waiting }
+    }
+
+    /// Spool id, as friend.send answered; the agent's session sees ⟦rh:<id>⟧.
+    public let id: String
+    /// Changes on every update; the cursor of friend.messages.
+    public let seq: Int
+    public let messageID: String
+    public let device: String
+    public let agent: String
+    public let kind: MessageKind
+    public let re: String?
+    public let text: String
+    public let acceptedAt: String
+    public let state: State
+    public let receivedAt: String?
+    public let closedAt: String?
+    public let rejectCode: String?
+    public let supersededBy: String?
+    public let replies: [FriendReply]
+
+    public init(
+        id: String, seq: Int, messageID: String, device: String, agent: String, kind: MessageKind, re: String? = nil,
+        text: String, acceptedAt: String, state: State, receivedAt: String? = nil, closedAt: String? = nil,
+        rejectCode: String? = nil, supersededBy: String? = nil, replies: [FriendReply] = []
+    ) {
+        self.id = id
+        self.seq = seq
+        self.messageID = messageID
+        self.device = device
+        self.agent = agent
+        self.kind = kind
+        self.re = re
+        self.text = text
+        self.acceptedAt = acceptedAt
+        self.state = state
+        self.receivedAt = receivedAt
+        self.closedAt = closedAt
+        self.rejectCode = rejectCode
+        self.supersededBy = supersededBy
+        self.replies = replies
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id, seq, device, agent, kind, re, text, state, replies
+        case messageID = "message_id"
+        case acceptedAt = "accepted_at"
+        case receivedAt = "received_at"
+        case closedAt = "closed_at"
+        case rejectCode = "reject_code"
+        case supersededBy = "superseded_by"
+    }
+
+    /// The agent's final answer, if any.
+    public var finalReply: FriendReply? { replies.last { $0.kind == .final } }
+}
+
+public struct FriendMessagesResponse: Decodable, Equatable, Sendable {
+    /// Oldest change first.
+    public let messages: [FriendMessage]
+    /// `since` for the next call; unchanged when nothing changed.
+    public let next: Int
+    /// More changed messages follow: call again with `next`.
+    public let more: Bool
+    public let serverTime: String
+
+    enum CodingKeys: String, CodingKey {
+        case messages, next, more
+        case serverTime = "server_time"
     }
 }
 

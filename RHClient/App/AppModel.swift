@@ -3,7 +3,8 @@ import Observation
 import RHAPI
 import RHCrypto
 
-/// App state: keys, pairing, the signed link to the core, Home data (stage 2).
+/// App state: keys, pairing, the signed link to the core, Home data (stage 2), the chat with the
+/// channel agent (friend slice 3).
 @MainActor
 @Observable
 final class AppModel {
@@ -32,6 +33,17 @@ final class AppModel {
     private(set) var quickItems: [QuickItem] = []
     /// Questions of the channel agent waiting for a decision (friend.questions), oldest first.
     private(set) var questions: [FriendQuestion] = []
+    /// The owner's messages with their state and the agent's replies, from the core
+    /// (friend.messages), oldest first; the last copy is cached on disk for an offline start.
+    private(set) var chat = ChatCache()
+    /// Where the chat cache lives; nil in tests that keep it in memory.
+    var chatCacheURL: URL?
+    /// What the agents.status row of the channel agent says: "working", "idle", "stopped", …;
+    /// nil when the team has no row for it or Home data is not loaded yet.
+    var agentState: String? {
+        guard let agent = channel?.agent, let rows = homeData[BuiltinData.agents]?.value?.rows else { return nil }
+        return rows.first { $0.id == agent }?.status?.text
+    }
     /// The agent on the channel, from the last status; nil until the first one. Messages and
     /// decisions are addressed to it and every name on the Chat tab is its title.
     var channel: Channel? { status?.channel }
@@ -94,6 +106,10 @@ final class AppModel {
         case (_?, nil): lose()
         case (_?, _?): phase = .paired
         }
+        if let record {
+            chatCacheURL = chatCacheURL ?? ChatCache.url(deviceID: record.deviceID)
+            chat = ChatCache.load(from: chatCacheURL!)
+        }
         #if DEBUG
         // A launch argument is for a phone that starts unpaired; a later Re-pair must not
         // pick it up silently.
@@ -122,7 +138,8 @@ final class AppModel {
         async let data = Self.attempt { try await client.data(ids: BuiltinData.home) }
         async let quick = Self.attempt { try await client.quick() }
         async let asked = Self.attempt { try await client.friendQuestions() }
-        let results = await (status, data, quick, asked)
+        async let talked = Self.attempt { try await Self.allMessages(client) }
+        let results = await (status, data, quick, asked, talked)
         var failure: (any Error)?
         switch results.0 {
         case .success(let value): self.status = value
@@ -138,6 +155,15 @@ final class AppModel {
         }
         switch results.3 {
         case .success(let value): questions = value.questions
+        case .failure(let error): failure = failure ?? error
+        }
+        switch results.4 {
+        case .success(let pages):
+            // Everything the core has: a cursor from before a core reset would hide the rest.
+            var fresh = ChatCache(outgoing: chat.outgoing, lastSeenReplySeq: chat.lastSeenReplySeq)
+            for page in pages { fresh.merge(page) }
+            chat = fresh
+            saveChat()
         case .failure(let error): failure = failure ?? error
         }
         if let failure {
@@ -190,23 +216,121 @@ final class AppModel {
         }
     }
 
-    /// A signed message to the channel agent; nil when it was not accepted (the reason is in
-    /// `connection` or `notice`). Nothing is sent before a status has named the agent.
-    func sendToFriend(_ text: String) async -> FriendSendResponse? {
-        guard let client else { return nil }
-        notice = nil  // a failure below must not show the reason of an earlier one
-        guard let channel else {
-            notice = String(localized: "The Mac has not said which agent is on the channel yet.")
+    /// Every page of friend.messages from the start (the core is the source of truth).
+    private nonisolated static func allMessages(_ client: CoreClient, pageLimit: Int = 20) async throws -> [FriendMessagesResponse] {
+        var pages: [FriendMessagesResponse] = []
+        var since = 0
+        for _ in 0..<pageLimit {
+            let page = try await client.friendMessages(FriendMessagesRequest(since: since, limit: 200))
+            pages.append(page)
+            since = page.next
+            if !page.more { break }
+        }
+        return pages
+    }
+
+    /// What changed since the last page: the Chat tab polls this while it is on screen. Quiet on
+    /// failure (the connection state says why); nothing is sent before the first status.
+    func pollMessages() async {
+        guard let client, channel != nil else { return }
+        do {
+            var page = try await client.friendMessages(FriendMessagesRequest(since: chat.cursor, limit: 200))
+            chat.merge(page)
+            while page.more {
+                page = try await client.friendMessages(FriendMessagesRequest(since: chat.cursor, limit: 200))
+                chat.merge(page)
+            }
+            saveChat()
+            connected()
+        } catch {
+            handle(error)
+        }
+    }
+
+    /// A signed message to the channel agent (friend.send). It stays in `chat.outgoing` until the
+    /// Mac accepts it (then it is in `chat.messages` as accepted); a failure keeps it there with
+    /// the reason, for Retry. Nothing is sent before a status has named the agent.
+    @discardableResult
+    func send(_ text: String, kind: MessageKind = .question, re: String? = nil) async -> FriendSendResponse? {
+        let item = OutgoingMessage(id: UUID().uuidString, text: text, kind: kind, re: re, createdAt: .now, failure: nil)
+        chat.outgoing.append(item)
+        saveChat()
+        return await deliver(item)
+    }
+
+    /// Send an unsent message again, with the same id: the core answers with the first message if
+    /// the earlier attempt did reach it.
+    @discardableResult
+    func retry(_ item: OutgoingMessage) async -> FriendSendResponse? {
+        guard let index = chat.outgoing.firstIndex(where: { $0.id == item.id }) else { return nil }
+        chat.outgoing[index].failure = nil
+        return await deliver(chat.outgoing[index])
+    }
+
+    /// "Make it a task": the agent may work on what it was asked as a question.
+    @discardableResult
+    func makeTask(_ message: FriendMessage) async -> FriendSendResponse? {
+        await send(String(localized: "Go ahead, make it a task."), kind: .task, re: message.id)
+    }
+
+    /// The same text once more, as a new message (after a rejection or a stopped agent).
+    @discardableResult
+    func sendAgain(_ message: FriendMessage) async -> FriendSendResponse? {
+        await send(message.text, kind: message.kind, re: message.re)
+    }
+
+    private func deliver(_ item: OutgoingMessage) async -> FriendSendResponse? {
+        func fail(_ reason: String) -> FriendSendResponse? {
+            if let index = chat.outgoing.firstIndex(where: { $0.id == item.id }) {
+                chat.outgoing[index].failure = reason
+            }
+            saveChat()
             return nil
         }
+        guard let client else { return fail(String(localized: "Not paired")) }
+        notice = nil  // a failure below must not show the reason of an earlier one
+        guard let channel else {
+            return fail(String(localized: "The Mac has not said which agent is on the channel yet."))
+        }
         do {
-            let answer = try await client.sendToFriend(FriendSendRequest(text: text, to: channel.agent))
+            let request = FriendSendRequest(id: item.id, text: item.text, to: channel.agent, kind: item.kind == .question ? nil : item.kind, re: item.re)
+            let answer = try await client.sendToFriend(request)
             connected()
+            chat.outgoing.removeAll { $0.id == item.id }
+            if !chat.messages.contains(where: { $0.id == answer.id }) {
+                // Shown at once; the next poll brings the core's copy (same id) with its state.
+                chat.messages.append(
+                    FriendMessage(
+                        id: answer.id, seq: 0, messageID: item.id, device: record?.deviceID ?? "", agent: channel.agent,
+                        kind: item.kind, re: item.re, text: item.text, acceptedAt: answer.acceptedAt, state: .accepted
+                    )
+                )
+            }
+            saveChat()
+            await pollMessages()
             return answer
         } catch {
             handle(error)
-            return nil
+            return fail(notice ?? connection?.title ?? String(localized: "Not sent"))
         }
+    }
+
+    /// Forget an unsent message.
+    func discard(_ item: OutgoingMessage) {
+        chat.outgoing.removeAll { $0.id == item.id }
+        saveChat()
+    }
+
+    /// The owner has the Chat tab in front: every reply so far counts as seen.
+    func markChatSeen() {
+        let newest = chat.newestReplySeq
+        guard newest > chat.lastSeenReplySeq else { return }
+        chat.lastSeenReplySeq = newest
+        saveChat()
+    }
+
+    private func saveChat() {
+        if let chatCacheURL { chat.save(to: chatCacheURL) }
     }
 
     /// Only the agent's open questions; nil when the call failed.
@@ -298,6 +422,7 @@ final class AppModel {
         homeData = [:]
         quickItems = []
         questions = []
+        chat = ChatCache()
     }
 
     #if DEBUG
@@ -422,6 +547,8 @@ final class AppModel {
         homeData = [:]
         quickItems = []
         questions = []
+        chatCacheURL = ChatCache.url(deviceID: record.deviceID)
+        chat = ChatCache()
         connection = nil
         Task { await refresh() }
         return true

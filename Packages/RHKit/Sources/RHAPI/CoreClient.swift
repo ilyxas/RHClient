@@ -127,6 +127,13 @@ public struct CoreClient: Sendable {
         try await call(.friendSend, body: message.encoded())
     }
 
+    /// The owner's messages changed after `request.since`, with state and the agent's replies
+    /// (friend.messages). The core is the source of truth: the app catches up here after being
+    /// closed or offline.
+    public func friendMessages(_ request: FriendMessagesRequest = FriendMessagesRequest()) async throws -> FriendMessagesResponse {
+        try await call(.friendMessages, body: JSONEncoder().encode(request))
+    }
+
     /// What the channel agent is waiting for the owner to decide (friend.questions).
     public func friendQuestions() async throws -> FriendQuestionsResponse {
         try await call(.friendQuestions)

@@ -43,6 +43,11 @@ public struct CoreOperation: Equatable, Sendable {
     public static let quickList = CoreOperation(op: "quick.list", method: .get, path: "/v1/quick", auth: .signed(.normal))
     /// A message to the channel agent; its verifier re-checks this signature itself.
     public static let friendSend = CoreOperation(op: "friend.send", method: .post, path: "/v1/friend", auth: .signed(.normal))
+    /// The owner's messages with their state and the agent's replies, changed after a cursor. A read
+    /// with parameters, so POST: the signed body hash covers the cursor.
+    public static let friendMessages = CoreOperation(
+        op: "friend.messages", method: .post, path: "/v1/friend/messages", auth: .signed(.normal)
+    )
     /// Open questions of the channel agent: text and the exact action, shown in full.
     public static let friendQuestions = CoreOperation(
         op: "friend.questions", method: .get, path: "/v1/friend/questions", auth: .signed(.normal)
