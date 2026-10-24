@@ -19,6 +19,7 @@ struct FriendView: View {
     @State private var deciding: String?
     @State private var draft = ""
     @State private var sending = false
+    @FocusState private var composing: Bool
 
     /// The agent's name on screen; a neutral word until the first status names it.
     private var agent: String { model.channel?.title ?? String(localized: "Agent") }
@@ -56,6 +57,10 @@ struct FriendView: View {
                 }
             }
             .listStyle(.plain)
+            // A tap outside the composer, or a drag of the list, puts the keyboard away. The tap
+            // is simultaneous, so Allow, Deny and text selection in the list still work.
+            .scrollDismissesKeyboard(.interactively)
+            .simultaneousGesture(TapGesture().onEnded { composing = false })
             .accessibilityIdentifier("friend.list")
             .scrollContentBackground(.hidden)
             .background { AppBackground() }
@@ -77,6 +82,7 @@ struct FriendView: View {
     private var composer: some View {
         HStack(alignment: .bottom, spacing: 8) {
             TextField("Message", text: $draft, axis: .vertical)
+                .focused($composing)
                 .lineLimit(1...6)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
