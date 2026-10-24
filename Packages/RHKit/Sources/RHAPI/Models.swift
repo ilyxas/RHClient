@@ -83,6 +83,8 @@ public struct StatusResponse: Decodable, Equatable, Sendable {
     public let agentVersion: String?
     public let mode: Mode
     public let serverTime: String
+    /// The one agent on the channel: `to` of every message and decision, and its name on screen.
+    public let channel: Channel
 
     enum CodingKeys: String, CodingKey {
         case macName = "mac_name"
@@ -90,6 +92,19 @@ public struct StatusResponse: Decodable, Equatable, Sendable {
         case agentVersion = "agent_version"
         case mode
         case serverTime = "server_time"
+        case channel
+    }
+}
+
+/// `status.channel`: the agent the owner put on the channel (the core's `[channel] agent`).
+/// It can change between two status calls when the owner switches the agent.
+public struct Channel: Decodable, Equatable, Sendable {
+    public let agent: String
+    public let title: String
+
+    public init(agent: String, title: String) {
+        self.agent = agent
+        self.title = title
     }
 }
 
@@ -146,16 +161,17 @@ public struct RevokeResponse: Decodable, Equatable, Sendable {
     }
 }
 
-/// friend.send body: `to` is always "Friend"; `id` is this phone's message id.
+/// friend.send body: `to` is the channel agent (`status.channel.agent`); `id` is this phone's
+/// message id. "friend" names the mechanism, not the agent.
 public struct FriendSendRequest: Encodable, Equatable, Sendable {
     public let id: String
     public let text: String
     public let to: String
 
-    public init(id: String = UUID().uuidString, text: String) {
+    public init(id: String = UUID().uuidString, text: String, to agent: String) {
         self.id = id
         self.text = text
-        self.to = "Friend"
+        self.to = agent
     }
 
     /// Sorted keys, no spaces, UTF-8 as is — the encoding of contracts/vectors/friend.json.
@@ -167,7 +183,7 @@ public struct FriendSendRequest: Encodable, Equatable, Sendable {
 }
 
 public struct FriendSendResponse: Decodable, Equatable, Sendable {
-    /// Where the core keeps the signed request; the Friend session sees ⟦rh:<id>⟧.
+    /// Where the core keeps the signed request; the agent's session sees ⟦rh:<id>⟧.
     public let id: String
     public let messageID: String
     public let acceptedAt: String
@@ -181,7 +197,7 @@ public struct FriendSendResponse: Decodable, Equatable, Sendable {
 
 // MARK: - friend.questions / friend.decide
 
-/// A question the Friend session asked before a protected action. `action` is canonical JSON
+/// A question the channel agent asked before a protected action. `action` is canonical JSON
 /// of the exact tool call; the phone shows it as is and signs it as is.
 public struct FriendQuestion: Decodable, Equatable, Sendable, Identifiable {
     public let id: String
@@ -242,8 +258,8 @@ public struct FriendDecideRequest: Encodable, Equatable, Sendable {
     public let action: String
     public let decision: FriendDecision
 
-    public init(question: FriendQuestion, decision: FriendDecision) {
-        self.to = "Friend"
+    public init(question: FriendQuestion, decision: FriendDecision, to agent: String) {
+        self.to = agent
         self.id = question.id
         self.questionSHA256 = question.textSHA256
         self.action = question.action
@@ -264,7 +280,7 @@ public struct FriendDecideRequest: Encodable, Equatable, Sendable {
 }
 
 public struct FriendDecideResponse: Decodable, Equatable, Sendable {
-    /// Where the core keeps the signed decision; the Friend session sees ⟦rh:<id>⟧.
+    /// Where the core keeps the signed decision; the agent's session sees ⟦rh:<id>⟧.
     public let id: String
     public let questionID: String
     public let decision: FriendDecision

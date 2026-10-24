@@ -28,14 +28,14 @@ final class FriendDecideTests: XCTestCase {
 
         app.tabBars.buttons["Chat"].tap()
         let text = app.descendants(matching: .any)["friend.question.text"].firstMatch
-        if !text.exists {
-            // The list loads on appear; a pull refreshes it.
-            app.descendants(matching: .any)["friend.list"].firstMatch.swipeDown()
-        }
-        XCTAssertTrue(waitFor(text, timeout: 30), "the question did not appear")
+        XCTAssertTrue(showQuestion(app, text, "UI test: resume pid 4242?"), "the question did not appear")
         XCTAssertEqual(text.label, "UI test: resume pid 4242?")
         let shown = app.descendants(matching: .any)["friend.question.action"].firstMatch
         XCTAssertEqual(shown.label, action, "the action must be shown in full, as is")
+        // Whose action it is: the dev core's channel agent, from status.channel.
+        let asker = app.descendants(matching: .any)["friend.question.asker"].firstMatch
+        XCTAssertEqual(asker.label, "Agent-Alpha asks")
+        XCTAssertTrue(app.navigationBars["Agent-Alpha"].exists, "the Chat tab is named after the agent")
 
         app.buttons["friend.allow"].tap()
         let allowed = NSPredicate(format: "label CONTAINS 'Allowed'")
@@ -53,11 +53,23 @@ final class FriendDecideTests: XCTestCase {
             "cmd": "friend.ask", "text": "UI test: deny this one", "action": action,
         ])
         XCTAssertEqual(second["ok"] as? Bool, true, "\(second)")
-        app.descendants(matching: .any)["friend.list"].firstMatch.swipeDown()
-        XCTAssertTrue(waitFor(text, label: "UI test: deny this one", timeout: 30), "the second question did not appear")
+        XCTAssertTrue(showQuestion(app, text, "UI test: deny this one"), "the second question did not appear")
         app.buttons["friend.deny"].tap()
         let denied = NSPredicate(format: "label CONTAINS 'Denied'")
         XCTAssertTrue(waitFor(app.descendants(matching: .any).matching(identifier: "friend.decided").matching(denied).firstMatch, timeout: 60))
+    }
+
+    /// The Chat tab loads its questions when it appears (.task); a pull on the list does not
+    /// always refresh it in the simulator. Leave the tab and come back until the question with
+    /// this text is shown.
+    @MainActor
+    private func showQuestion(_ app: XCUIApplication, _ text: XCUIElement, _ label: String) -> Bool {
+        for _ in 0..<6 {
+            if text.waitForExistence(timeout: 5), text.label == label { return true }
+            app.tabBars.buttons["Home"].tap()
+            app.tabBars.buttons["Chat"].tap()
+        }
+        return waitFor(text, label: label, timeout: 5)
     }
 }
 

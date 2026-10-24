@@ -36,6 +36,7 @@ struct CoreClientTests {
         let status = try await client(core).status()
         #expect(status.mode == .dev)
         #expect(status.agentVersion == nil)
+        #expect(status.channel == Channel(agent: FakeCore.agent, title: FakeCore.agent))
         let object = try #require(core.seen.last?.object)
         #expect(core.seen.last?.method == "GET")
         #expect(object["body"] == .string(Digest.sha256Hex(Data())))

@@ -23,18 +23,24 @@ final class HomeLogTests: XCTestCase {
             XCTAssertTrue(waitFor(metric(app, "sys.cpu"), value: "38%", timeout: 30))
             XCTAssertTrue(waitFor(metric(app, "sys.memory"), value: "61%", timeout: 5))
             XCTAssertTrue(waitFor(metric(app, "sys.disk_free"), value: "112 GB free", timeout: 5))
-            // tests/fixtures/stage2/team.md: no status rules in dev, so every agent is unknown.
+            // tests/fixtures/stage2/team.md: no status rules in dev, so every agent is unknown,
+            // except the channel agent (Agent-Alpha in dev): its rule comes from [channel]
+            // project_dir, a scratch folder no Claude session runs in, so it is stopped.
             let alpha = app.descendants(matching: .any)["home.agent.Agent-Alpha"].firstMatch
             XCTAssertTrue(waitFor(alpha, timeout: 5))
-            XCTAssertTrue(alpha.label.contains("unknown"), alpha.label)
+            XCTAssertTrue(alpha.label.contains("stopped"), alpha.label)
+            let beta = app.descendants(matching: .any)["home.agent.Agent-Beta"].firstMatch
+            XCTAssertTrue(waitFor(beta, timeout: 5))
+            XCTAssertTrue(beta.label.contains("unknown"), beta.label)
         } else {
             XCTAssertTrue(waitFor(metric(app, "sys.cpu"), timeout: 30))
         }
         XCTAssertTrue(app.descendants(matching: .any)["home.attention"].firstMatch.exists)
 
-        // Last Activity has this phone's pairing; View all opens the Log tab.
+        // Last Activity shows the newest five entries; the other UI tests share this dev core,
+        // so this phone's pairing may already be older than that. The Log has it (commands).
         let paired = NSPredicate(format: "label BEGINSWITH 'Paired'")
-        XCTAssertTrue(waitFor(app.descendants(matching: .any).matching(paired).firstMatch, timeout: 10))
+        XCTAssertTrue(waitFor(app.buttons["home.activity.all"], timeout: 10))
         app.buttons["home.activity.all"].tap()
 
         let entry = app.descendants(matching: .any).matching(identifier: "log.entry").firstMatch

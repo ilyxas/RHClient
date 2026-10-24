@@ -20,25 +20,28 @@ struct FriendTests {
     }
 
     struct Vectors: Decodable {
+        /// The channel agent every body is addressed to.
+        let agent: String
         let build: [BuildVector]
     }
 
-    static let vectors: [BuildVector] = {
+    static let file: Vectors = {
         let data = try! ContractsLocation.data("vectors/friend.json")
-        return try! JSONDecoder().decode(Vectors.self, from: data).build
+        return try! JSONDecoder().decode(Vectors.self, from: data)
     }()
+    static let vectors: [BuildVector] = file.build
 
     @Test(arguments: FriendTests.vectors.map(\.name))
     func bodyMatchesTheVector(name: String) throws {
         let v = try #require(Self.vectors.first { $0.name == name })
-        let body = try FriendSendRequest(id: v.id, text: v.text).encoded()
+        let body = try FriendSendRequest(id: v.id, text: v.text, to: Self.file.agent).encoded()
         #expect(String(decoding: body, as: UTF8.self) == v.expectedBodyText)
     }
 
     @Test func sendToFriendIsSignedWithTheNormalKey() async throws {
         let core = try FakeCore(signer: signer)
         let client = CoreClient(endpoint: core.endpoint, signer: signer, transport: core)
-        let message = FriendSendRequest(id: "m-1", text: "проверь сборку")
+        let message = FriendSendRequest(id: "m-1", text: "проверь сборку", to: FakeCore.agent)
         let answer = try await client.sendToFriend(message)
         #expect(answer.messageID == "m-1")
         #expect(answer.id.count == 32)
@@ -52,8 +55,16 @@ struct FriendTests {
         #expect(object["body"] == .string(Digest.sha256Hex(seen[1].body)))
     }
 
+    @Test func aMessageToAnotherAgentIsRefused() async throws {
+        let core = try FakeCore(signer: signer)
+        let client = CoreClient(endpoint: core.endpoint, signer: signer, transport: core)
+        await #expect(throws: CoreClientError.self) {
+            try await client.sendToFriend(FriendSendRequest(text: "x", to: "Agent-Beta"))
+        }
+    }
+
     @Test func newMessageIDsFitTheContract() {
-        let id = FriendSendRequest(text: "x").id
+        let id = FriendSendRequest(text: "x", to: FakeCore.agent).id
         #expect(!id.isEmpty && id.count <= 64)
         #expect(id.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "-") })
     }

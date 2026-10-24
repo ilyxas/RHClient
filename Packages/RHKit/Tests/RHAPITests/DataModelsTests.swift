@@ -19,7 +19,7 @@ struct DataModelsTests {
         #expect(activity.first?.status == nil)
 
         let agents = try #require(values[BuiltinData.agents]?.value?.rows)
-        #expect(agents.map(\.id) == ["Friend", "RemoteHands"])
+        #expect(agents.map(\.id) == ["Agent-Alpha", "RemoteHands"])
         #expect(agents[0].status == StatusValue(state: .ok, text: "monitoring"))
         #expect(agents[1].status?.state == .off)
         #expect(agents[1].at == nil)

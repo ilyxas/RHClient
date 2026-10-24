@@ -44,12 +44,13 @@ struct FriendDecideTests {
     }
 
     struct Vectors: Decodable {
+        let agent: String
         let question: FriendQuestion
         let build: Build
         let decideWindowS: Int
 
         enum CodingKeys: String, CodingKey {
-            case question, build
+            case agent, question, build
             case decideWindowS = "decide_window_s"
         }
     }
@@ -70,7 +71,7 @@ struct FriendDecideTests {
     @Test(arguments: FriendDecideTests.vectors.build.decideBody.map(\.name))
     func decideBodyMatchesTheVector(name: String) throws {
         let v = try #require(Self.vectors.build.decideBody.first { $0.name == name })
-        let body = try FriendDecideRequest(question: Self.vectors.question, decision: v.decision).encoded()
+        let body = try FriendDecideRequest(question: Self.vectors.question, decision: v.decision, to: Self.vectors.agent).encoded()
         #expect(String(decoding: body, as: UTF8.self) == v.expectedBodyText)
         #expect(v.decision.keyLevel == v.keyLevel)
         #expect(CoreOperation.friendDecide(v.decision).auth == .signed(v.keyLevel))
@@ -101,7 +102,7 @@ struct FriendDecideTests {
     @Test func allowIsSignedWithTheCriticalKey() async throws {
         let core = try FakeCore(signer: signer)
         let client = CoreClient(endpoint: core.endpoint, signer: signer, transport: core)
-        let request = FriendDecideRequest(question: FakeCore.question, decision: .allow)
+        let request = FriendDecideRequest(question: FakeCore.question, decision: .allow, to: FakeCore.agent)
         let answer = try await client.decide(request)
         #expect(answer.decision == .allow && answer.questionID == FakeCore.question.id && answer.id.count == 32)
         let seen = core.seen
@@ -116,7 +117,7 @@ struct FriendDecideTests {
     @Test func denyIsSignedWithTheNormalKey() async throws {
         let core = try FakeCore(signer: signer)
         let client = CoreClient(endpoint: core.endpoint, signer: signer, transport: core)
-        let answer = try await client.decide(FriendDecideRequest(question: FakeCore.question, decision: .deny))
+        let answer = try await client.decide(FriendDecideRequest(question: FakeCore.question, decision: .deny, to: FakeCore.agent))
         #expect(answer.decision == .deny)
         #expect(core.seen.last?.object?["key"] == .string("normal"))
     }
@@ -127,10 +128,10 @@ struct FriendDecideTests {
         let q = FakeCore.question
         let changed = FriendQuestion(id: q.id, text: q.text + " ", action: q.action, askedAt: q.askedAt)
         await #expect(throws: CoreClientError.self) {
-            try await client.decide(FriendDecideRequest(question: changed, decision: .allow))
+            try await client.decide(FriendDecideRequest(question: changed, decision: .allow, to: FakeCore.agent))
         }
         do {
-            _ = try await client.decide(FriendDecideRequest(question: changed, decision: .deny))
+            _ = try await client.decide(FriendDecideRequest(question: changed, decision: .deny, to: FakeCore.agent))
             Issue.record("a changed question was accepted")
         } catch CoreClientError.rejected(let rejection) {
             #expect(rejection.code == .badRequest)
