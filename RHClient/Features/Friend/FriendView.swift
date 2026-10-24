@@ -2,24 +2,35 @@ import RHAPI
 import RHCrypto
 import SwiftUI
 
-/// The Chat tab until the RemoteHands chat arrives at stage 3: the channel agent's questions
-/// waiting for a decision (friend.questions / friend.decide) and messages to it (friend.send).
-/// The agent is whoever `status.channel` names; every name on this tab is its title, so a
-/// switch on the Mac renames the tab with the next status. "friend" in identifiers is the
-/// mechanism's name, not the agent's.
+/// The Chat tab: the owner's messages to the channel agent with their state and the agent's
+/// replies (friend.send / friend.messages), and the agent's questions waiting for a decision
+/// (friend.questions / friend.decide). The agent is whoever `status.channel` names; every name on
+/// this tab is its title, so a switch on the Mac renames the tab with the next status. "friend"
+/// in identifiers is the mechanism's name, not the agent's.
 ///
-/// A question shows who asks, its text and the exact action in full, no truncation: what you
-/// allow is exactly that tool call, nothing wider. **Allow** signs with the critical key (a fresh
-/// Face ID), **Deny** with the normal key. The Mac keeps every decision as signed; the gate lets
-/// exactly that call through once, within two minutes.
+/// A message is a **question** (answered in text; the agent's gate lets read-only tools through
+/// and routes anything else through a decision) or a **task** (the agent works). Under each one:
+/// Accepted by the Mac → received by the agent → working / waiting for a decision → answered; or
+/// not accepted, or replaced by a newer message. The states after "Accepted by the Mac" and the
+/// replies are what the agent reports over the Mac's local socket, not signed facts: only the
+/// owner's signature on the way in and the Mac's on the way out are verified.
+///
+/// A question of the agent shows who asks, its text and the exact action in full, no truncation:
+/// what you allow is exactly that tool call, nothing wider. **Allow** signs with the critical key
+/// (a fresh Face ID), **Deny** with the normal key. The Mac keeps every decision as signed; the
+/// gate lets exactly that call through once, within two minutes.
 struct FriendView: View {
     @Environment(AppModel.self) private var model
-    @State private var sent: [SentMessage] = []
     @State private var decided: [DecidedQuestion] = []
     @State private var deciding: String?
     @State private var draft = ""
+    @State private var kind: MessageKind = .question
     @State private var sending = false
+    @State private var acting: String?
     @FocusState private var composing: Bool
+
+    /// How often the tab asks the core what changed while it is on screen (seconds).
+    static let pollInterval: Duration = .seconds(3)
 
     /// The agent's name on screen; a neutral word until the first status names it.
     private var agent: String { model.channel?.title ?? String(localized: "Agent") }
@@ -47,13 +58,30 @@ struct FriendView: View {
                     }
                 }
                 Section {
-                    ForEach(sent) { message in
-                        SentMessageRow(message: message)
+                    ForEach(model.chat.messages) { message in
+                        MessageRow(
+                            message: message,
+                            agent: agent,
+                            agentState: model.agentState,
+                            busy: acting == message.id,
+                            makeTask: canMakeTask(message) ? { makeTask(message) } : nil,
+                            sendAgain: canSendAgain(message) ? { sendAgain(message) } : nil
+                        )
+                    }
+                    ForEach(model.chat.outgoing) { item in
+                        OutgoingRow(
+                            item: item,
+                            busy: acting == item.id,
+                            retry: { retry(item) },
+                            discard: { model.discard(item) }
+                        )
                     }
                 } header: {
-                    if !sent.isEmpty { Text("Messages") }
+                    if !model.chat.messages.isEmpty || !model.chat.outgoing.isEmpty { Text("Messages") }
                 } footer: {
-                    Text("Signed on this iPhone. \(agent) checks the signature before reading.")
+                    Text(
+                        "Signed on this iPhone; \(agent) checks the signature before reading. After “Accepted by the Mac”, the states and replies are what \(agent) reports, not verified facts."
+                    )
                 }
             }
             .listStyle(.plain)
@@ -65,42 +93,96 @@ struct FriendView: View {
             .scrollContentBackground(.hidden)
             .background { AppBackground() }
             .overlay {
-                if sent.isEmpty && model.questions.isEmpty && decided.isEmpty {
+                if model.chat.messages.isEmpty && model.chat.outgoing.isEmpty && model.questions.isEmpty && decided.isEmpty {
                     ContentUnavailableView(
                         "Message to \(agent)", systemImage: "checkmark.seal",
-                        description: Text("\(agent) sees it as a verified message from you. Questions from \(agent) appear here too.")
+                        description: Text("\(agent) sees it as a verified message from you and answers here. Questions from \(agent) appear here too.")
                     )
                 }
             }
-            .refreshable { await model.loadQuestions() }
-            .task { await model.loadQuestions() }
+            .refreshable {
+                await model.loadQuestions()
+                await model.pollMessages()
+            }
+            .task {
+                // While the tab is on screen: the agent's questions once, then what changed
+                // every few seconds (receipts, replies, state). Cancelled when the tab goes away.
+                await model.loadQuestions()
+                while !Task.isCancelled {
+                    await model.pollMessages()
+                    model.markChatSeen()
+                    try? await Task.sleep(for: Self.pollInterval)
+                }
+            }
+            .onChange(of: model.chat.newestReplySeq) { model.markChatSeen() }
             .safeAreaInset(edge: .bottom) { composer }
             .navigationTitle(agent)
         }
     }
 
+    /// A question may become a task while it still matters (not replaced, not refused).
+    private func canMakeTask(_ message: FriendMessage) -> Bool {
+        message.kind == .question && message.state != .superseded && message.state != .rejected
+    }
+
+    /// Worth sending once more: the agent's verifier refused it, or the agent is not running.
+    private func canSendAgain(_ message: FriendMessage) -> Bool {
+        message.state == .rejected || (message.state == .received && model.agentState == "stopped")
+    }
+
+    private func makeTask(_ message: FriendMessage) {
+        act(message.id) { await model.makeTask(message) }
+    }
+
+    private func sendAgain(_ message: FriendMessage) {
+        act(message.id) { await model.sendAgain(message) }
+    }
+
+    private func retry(_ item: OutgoingMessage) {
+        act(item.id) { await model.retry(item) }
+    }
+
+    /// One action at a time; the row shows it is busy meanwhile.
+    private func act(_ id: String, _ work: @escaping @MainActor () async -> Void) {
+        guard acting == nil else { return }
+        acting = id
+        Task {
+            await work()
+            acting = nil
+        }
+    }
+
     private var composer: some View {
-        HStack(alignment: .bottom, spacing: 8) {
-            TextField("Message", text: $draft, axis: .vertical)
-                .focused($composing)
-                .lineLimit(1...6)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 10)
-                .glassEffect(.regular, in: .rect(cornerRadius: 20))
-                .accessibilityIdentifier("friend.input")
-            Button {
-                Task { await send() }
-            } label: {
-                Image(systemName: sending ? "ellipsis" : "arrow.up")
-                    .font(.headline)
-                    .frame(width: 40, height: 40)
+        VStack(spacing: 8) {
+            Picker("Kind", selection: $kind) {
+                Text("Question").tag(MessageKind.question)
+                Text("Task").tag(MessageKind.task)
             }
-            .buttonStyle(.plain)
-            .foregroundStyle(Palette.onAccent)
-            .glassEffect(.regular.tint(Palette.accent).interactive(), in: .circle)
-            .disabled(sending || model.channel == nil || draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            .accessibilityLabel("Send")
-            .accessibilityIdentifier("friend.send")
+            .pickerStyle(.segmented)
+            .frame(maxWidth: 220)
+            .accessibilityIdentifier("friend.kind")
+            HStack(alignment: .bottom, spacing: 8) {
+                TextField(kind == .question ? "Ask \(agent)" : "Task for \(agent)", text: $draft, axis: .vertical)
+                    .focused($composing)
+                    .lineLimit(1...6)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .glassEffect(.regular, in: .rect(cornerRadius: 20))
+                    .accessibilityIdentifier("friend.input")
+                Button {
+                    Task { await send() }
+                } label: {
+                    Image(systemName: sending ? "ellipsis" : "arrow.up")
+                        .font(.headline)
+                        .frame(width: 40, height: 40)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(Palette.onAccent)
+                .glassEffect(.regular.tint(Palette.accent).interactive(), in: .circle)
+                .disabled(sending || model.channel == nil || draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .accessibilityLabel("Send")
+                .accessibilityIdentifier("friend.send")
+            }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
@@ -111,14 +193,8 @@ struct FriendView: View {
         guard !text.isEmpty else { return }
         sending = true
         defer { sending = false }
-        let index = sent.count
-        sent.append(SentMessage(text: text, state: .sending))
-        if let answer = await model.sendToFriend(text) {
-            sent[index].state = .accepted(answer.acceptedAt)
-            draft = ""
-        } else {
-            sent[index].state = .failed(model.notice ?? model.connection?.title ?? String(localized: "Not sent"))
-        }
+        draft = ""  // the message is in the list from now on, accepted or waiting for Retry
+        await model.send(text, kind: kind)
     }
 
     private func decide(_ question: FriendQuestion, _ decision: FriendDecision) async {
@@ -261,29 +337,59 @@ private struct DecidedRow: View {
     }
 }
 
-struct SentMessage: Identifiable, Equatable {
-    enum State: Equatable {
-        case sending
-        /// The Mac accepted it at this time (UTC, protocol format).
-        case accepted(String)
-        case failed(String)
-    }
-
-    let id = UUID()
-    let text: String
-    var state: State
-}
-
-private struct SentMessageRow: View {
-    let message: SentMessage
+/// One of the owner's messages as the core keeps it: the text, its kind, the state under it, the
+/// agent's replies, and what the owner can do next.
+private struct MessageRow: View {
+    let message: FriendMessage
+    let agent: String
+    /// agents.status of the channel agent ("working", "stopped", …), to tell "on it" from "not running".
+    let agentState: String?
+    let busy: Bool
+    let makeTask: (() -> Void)?
+    let sendAgain: (() -> Void)?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(message.text)
-                .frame(maxWidth: .infinity, alignment: .leading)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(message.text)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .textSelection(.enabled)
+                Text(message.kind == .task ? "Task" : "Question")
+                    .font(.caption2.weight(.semibold))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(.quaternary.opacity(0.5), in: Capsule())
+                    .foregroundStyle(.secondary)
+            }
             Label(status, systemImage: icon)
                 .font(.footnote)
                 .foregroundStyle(color)
+            ForEach(message.replies) { reply in
+                ReplyBubble(reply: reply, agent: agent)
+            }
+            if makeTask != nil || sendAgain != nil {
+                HStack(spacing: 12) {
+                    if let sendAgain {
+                        Button(action: sendAgain) {
+                            Label("Send again", systemImage: "arrow.clockwise")
+                        }
+                        .buttonStyle(.bordered)
+                        .accessibilityIdentifier("friend.sendAgain")
+                    }
+                    if let makeTask {
+                        Button(action: makeTask) {
+                            Label("Make it a task", systemImage: busy ? "ellipsis" : "hammer")
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(Palette.accent)
+                        .foregroundStyle(Palette.onAccent)
+                        .accessibilityIdentifier("friend.makeTask")
+                    }
+                }
+                .disabled(busy)
+                .controlSize(.small)
+                .padding(.top, 2)
+            }
         }
         .padding(.vertical, 4)
         .listRowBackground(Color.clear)
@@ -291,28 +397,112 @@ private struct SentMessageRow: View {
         .accessibilityIdentifier("friend.message")
     }
 
+    private func time(_ stamp: String?) -> String {
+        stamp.flatMap { ProtocolTime.parse($0) }.map { $0.formatted(date: .omitted, time: .standard) } ?? stamp ?? ""
+    }
+
+    /// What the owner sees under the message. Everything after "Accepted by the Mac" is the agent
+    /// side's report (the footer says so).
     private var status: String {
         switch message.state {
-        case .sending: String(localized: "Sending…")
-        case .accepted(let at):
-            String(localized: "Accepted by the Mac · \(ProtocolTime.parse(at).map { $0.formatted(date: .omitted, time: .standard) } ?? at)")
-        case .failed(let reason): reason
+        case .accepted:
+            String(localized: "Accepted by the Mac · \(time(message.acceptedAt))")
+        case .received where agentState == "stopped":
+            String(localized: "\(agent) is not running · received \(time(message.receivedAt))")
+        case .received:
+            String(localized: "\(agent) is on it · received \(time(message.receivedAt))")
+        case .waiting:
+            String(localized: "\(agent) is waiting for your decision")
+        case .answered:
+            String(localized: "Answered · \(time(message.closedAt))")
+        case .rejected:
+            String(localized: "Not accepted by \(agent): \(message.rejectCode ?? "rejected")")
+        case .superseded:
+            String(localized: "Replaced by a newer message")
         }
     }
 
     private var icon: String {
         switch message.state {
-        case .sending: "clock"
         case .accepted: "checkmark.seal"
-        case .failed: "exclamationmark.triangle"
+        case .received where agentState == "stopped": "power.circle"
+        case .received: "ellipsis.circle"
+        case .waiting: "questionmark.bubble"
+        case .answered: "checkmark.bubble"
+        case .rejected: "exclamationmark.triangle"
+        case .superseded: "arrow.uturn.forward"
         }
     }
 
     private var color: Color {
         switch message.state {
-        case .sending: .secondary
-        case .accepted: Palette.ok
-        case .failed: .red
+        case .accepted, .answered: Palette.ok
+        case .received where agentState == "stopped": .orange
+        case .received, .superseded: .secondary
+        case .waiting: .orange
+        case .rejected: .red
         }
+    }
+}
+
+/// One reply of the agent: a progress note on the way, or the answer.
+private struct ReplyBubble: View {
+    let reply: FriendReply
+    let agent: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("\(agent) · \(ProtocolTime.parse(reply.at).map { $0.formatted(date: .omitted, time: .shortened) } ?? reply.at)")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text(reply.text)
+                .font(reply.kind == .final ? .body : .callout.italic())
+                .foregroundStyle(reply.kind == .final ? .primary : .secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .textSelection(.enabled)
+        }
+        .padding(10)
+        .background(.quaternary.opacity(reply.kind == .final ? 0.5 : 0.25), in: .rect(cornerRadius: 12))
+        .accessibilityIdentifier(reply.kind == .final ? "friend.reply" : "friend.progress")
+    }
+}
+
+/// A message the Mac has not accepted yet: on its way, or not sent, with Retry.
+private struct OutgoingRow: View {
+    let item: OutgoingMessage
+    let busy: Bool
+    let retry: () -> Void
+    let discard: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(item.text)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Label(item.failure ?? String(localized: "Sending…"), systemImage: item.failure == nil ? "clock" : "exclamationmark.triangle")
+                .font(.footnote)
+                .foregroundStyle(item.failure == nil ? Color.secondary : Color.red)
+            if item.failure != nil {
+                HStack(spacing: 12) {
+                    Button(action: retry) {
+                        Label(busy ? "Sending…" : "Retry", systemImage: "arrow.clockwise")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Palette.accent)
+                    .foregroundStyle(Palette.onAccent)
+                    .accessibilityIdentifier("friend.retry")
+                    Button(role: .destructive, action: discard) {
+                        Label("Discard", systemImage: "trash")
+                    }
+                    .buttonStyle(.bordered)
+                    .accessibilityIdentifier("friend.discard")
+                }
+                .disabled(busy)
+                .controlSize(.small)
+            }
+        }
+        .padding(.vertical, 4)
+        .listRowBackground(Color.clear)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("friend.message")
     }
 }

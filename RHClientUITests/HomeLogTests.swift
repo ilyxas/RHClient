@@ -50,7 +50,16 @@ final class HomeLogTests: XCTestCase {
         XCTAssertTrue(waitFor(app.descendants(matching: .any).matching(identifier: "log.entry").matching(paired).firstMatch, timeout: 30))
 
         app.buttons["log.filter.chat"].tap()
-        XCTAssertTrue(waitFor(app.staticTexts["No entries"], timeout: 30), "chat arrives at stage 3, the feed is empty")
+        // The chat filter shows the owner's messages and the agent's replies ("owner → <agent>",
+        // "<agent> → owner"). The Friend tests leave some in this dev core when they ran first;
+        // otherwise the feed is empty.
+        let chat = NSPredicate(format: "label CONTAINS '→'")
+        let chatEntry = app.descendants(matching: .any).matching(identifier: "log.entry").matching(chat).firstMatch
+        let deadline = Date().addingTimeInterval(30)
+        while Date() < deadline, !chatEntry.exists, !app.staticTexts["No entries"].exists {
+            Thread.sleep(forTimeInterval: 0.5)
+        }
+        XCTAssertTrue(chatEntry.exists || app.staticTexts["No entries"].exists, "the chat filter shows chat entries or nothing")
 
         app.buttons["log.filter.all"].tap()
         let search = app.searchFields.firstMatch

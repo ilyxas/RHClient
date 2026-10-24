@@ -28,6 +28,7 @@ enum AppTab: String, CaseIterable, Identifiable, Hashable {
 }
 
 struct RootTabView: View {
+    @Environment(AppModel.self) private var model
     @State private var selection: AppTab = .home
 
     var body: some View {
@@ -41,6 +42,8 @@ struct RootTabView: View {
                     default: PlaceholderScreen(tab: tab)
                     }
                 }
+                // Replies of the agent the owner has not seen yet.
+                .badge(tab == .chat ? model.chat.unreadReplies : 0)
             }
         }
         .tint(Palette.accent)
